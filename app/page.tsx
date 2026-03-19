@@ -6,12 +6,10 @@ import { LandingPage } from "@/components/ui/venator-landing";
 import { Pricing } from "@/components/ui/pricing";
 import { FeatureSteps } from "@/components/ui/feature-section";
 import {
-  ArrowRight,
   Brain,
   CheckCircle2,
   GitBranch,
   Shield,
-  Sparkles,
   Zap,
 } from "lucide-react";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
@@ -311,43 +309,7 @@ export default function HomePage() {
         />
       </section>
 
-      {/* ─── FINAL CTA ────────────────────────────────────────────── */}
-      <section className="relative mx-auto max-w-7xl px-4 py-24 lg:px-8">
-        <div className="glass-panel neon-ring relative overflow-hidden rounded-3xl p-12 text-center md:p-20">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.08)_0%,transparent_60%)]" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-cyan-300/0 via-cyan-300/60 to-cyan-300/0" />
-
-          <div className="relative">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-cyan-300">
-              <Sparkles className="h-3 w-3" />
-              Free to start
-            </div>
-            <h2 className="mt-2 text-4xl font-bold tracking-tight text-slate-50 md:text-5xl text-balance">
-              Your next project deserves a solid foundation.
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-slate-400">
-              Join developers who plan smarter, build faster, and stop second-guessing their tech stack.
-            </p>
-            <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-              <Link
-                href="/signup"
-                className="group inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-8 py-4 text-base font-bold text-slate-900 shadow-2xl shadow-cyan-500/30 hover:bg-cyan-400 transition-all"
-              >
-                Start planning for free
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-base font-medium text-slate-300 hover:bg-white/10 transition-all"
-              >
-                Already have an account? Log in
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FOOTER ───────────────────────────────────────────────── */}
+{/* ─── FOOTER ───────────────────────────────────────────────── */}
       <footer className="border-t border-white/5 py-10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm text-slate-600 sm:flex-row lg:px-8">
           <div className="flex items-center gap-2 font-semibold text-slate-500">
