@@ -1,97 +1,93 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { LandingPage } from "@/components/ui/venator-landing";
 import {
   ArrowRight,
   Brain,
   CheckCircle2,
-  ChevronRight,
   GitBranch,
   Layers,
-  Map,
   Shield,
   Sparkles,
   Zap,
 } from "lucide-react";
-import { SiteHeader } from "@/components/layout/header";
 
-// TODO: Pass real session state from Supabase when auth is implemented
-const IS_LOGGED_IN = false;
+export default function HomePage() {
+  const router = useRouter();
 
-export default function LandingPage() {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
-      {/* ─── Global ambient glows ─────────────────────────────────── */}
-      <div className="pointer-events-none fixed -left-60 top-0 -z-10 h-[600px] w-[600px] rounded-full bg-cyan-500/10 blur-[120px]" />
-      <div className="pointer-events-none fixed -right-40 top-40 -z-10 h-[500px] w-[500px] rounded-full bg-fuchsia-600/10 blur-[100px]" />
-      <div className="pointer-events-none fixed bottom-0 left-1/2 -z-10 h-[400px] w-[700px] -translate-x-1/2 rounded-full bg-cyan-400/5 blur-[80px]" />
-
-      <SiteHeader isLoggedIn={IS_LOGGED_IN} />
-
-      {/* ─── HERO ─────────────────────────────────────────────────── */}
-      <section className="relative mx-auto flex max-w-7xl flex-col items-center px-4 pb-24 pt-36 text-center lg:px-8 lg:pt-44">
-        {/* pill badge */}
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-300">
-          <Sparkles className="h-3 w-3" />
-          AI-powered architecture advisor
-        </div>
-
-        <h1 className="max-w-4xl text-5xl font-bold leading-[1.1] tracking-tight text-slate-50 md:text-6xl lg:text-7xl text-balance">
-          From idea to
-          <span className="block bg-gradient-to-r from-cyan-300 via-cyan-400 to-fuchsia-400 bg-clip-text text-transparent">
-            perfect architecture
-          </span>
-          in minutes.
-        </h1>
-
-        <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-400 md:text-xl">
-          Stop second-guessing every tech choice. Venator walks you through every architectural decision — with clear explanations and honest trade-offs — so you can build with confidence from day one.
-        </p>
-
-        <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-          <Link
-            href="/signup"
-            className="group inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-7 py-3.5 text-base font-bold text-slate-900 shadow-2xl shadow-cyan-500/30 hover:bg-cyan-400 transition-all"
-          >
-            Start planning for free
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-          <Link
-            href="#why"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-7 py-3.5 text-base font-medium text-slate-300 hover:bg-white/10 hover:text-slate-100 transition-all"
-          >
-            Why we built this
-            <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        {/* hero graphic — mock graph preview */}
-        <div className="relative mt-20 w-full max-w-5xl">
-          <div className="glass-panel neon-ring overflow-hidden rounded-2xl p-1">
-            {/* fake browser chrome */}
-            <div className="flex h-9 items-center gap-2 rounded-t-xl border-b border-white/5 bg-white/5 px-4">
-              <div className="h-2.5 w-2.5 rounded-full bg-red-400/60" />
-              <div className="h-2.5 w-2.5 rounded-full bg-yellow-400/60" />
-              <div className="h-2.5 w-2.5 rounded-full bg-green-400/60" />
-              <div className="ml-4 h-5 flex-1 max-w-xs rounded-full bg-white/5 px-3 flex items-center">
-                <span className="text-[10px] text-slate-500">venator.app/dashboard</span>
+    <div className="relative overflow-x-hidden bg-background text-foreground">
+      {/* ─── HERO (Aurora animated section) ──────────────────────── */}
+      <LandingPage
+        logo={{ initials: "VN", name: "Venator" }}
+        navLinks={[
+          { label: "Overview", href: "#about" },
+          { label: "Features", href: "#features" },
+          { label: "How it Works", href: "#how-it-works" },
+        ]}
+        actionButton={{
+          label: "Login",
+          onClick: () => router.push("/login"),
+        }}
+        hero={{
+          titleLine1: "Design your app's",
+          titleLine2Gradient: "Architecture with AI",
+          subtitle:
+            "Venator takes your project idea and builds a comprehensive tech stack and visual architecture graph tailored to your needs.",
+        }}
+        ctaButtons={{
+          primary: {
+            label: "Start Planning Free",
+            onClick: () => router.push("/signup"),
+          },
+          secondary: {
+            label: "View Dashboard",
+            onClick: () => router.push("/dashboard"),
+          },
+        }}
+        features={[
+          {
+            title: "Next.js App Router",
+            description:
+              "Built with the latest React Server Components and Server Actions for optimal performance.",
+            tags: ["Next.js 15", "TypeScript"],
+            imageContent: (
+              <div className="text-4xl font-bold text-white/20 select-none">
+                ▲
               </div>
-            </div>
-            {/* mock graph canvas */}
-            <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-b-xl bg-[oklch(0.15_0.018_254)] md:h-80">
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.06)_0%,transparent_70%)]" />
-              {/* mock nodes */}
-              <MockGraphPreview />
-            </div>
-          </div>
-          {/* glow under preview */}
-          <div className="pointer-events-none absolute -bottom-8 left-1/2 -z-10 h-32 w-3/4 -translate-x-1/2 rounded-full bg-cyan-500/15 blur-3xl" />
-        </div>
-      </section>
+            ),
+          },
+          {
+            title: "Supabase Integration",
+            description:
+              "Seamless authentication and PostgreSQL database setup out of the box.",
+            tags: ["Auth", "PostgreSQL"],
+            imageContent: (
+              <div className="text-4xl text-white/20 select-none">⚡</div>
+            ),
+          },
+          {
+            title: "Claude AI Powered",
+            description:
+              "Leveraging Anthropic's Claude to provide expert architectural advice tailored to your project.",
+            tags: ["AI", "Anthropic API"],
+            imageContent: (
+              <div className="text-4xl text-white/50 select-none">✨</div>
+            ),
+          },
+        ]}
+        stats={[
+          { value: "Step-by-Step", label: "Guided Planning" },
+          { value: "AI Generated", label: "Architecture Graphs" },
+          { value: "Production", label: "Ready Tech Stacks" },
+        ]}
+        showAnimatedBackground={true}
+      />
 
       {/* ─── WHY WE BUILT THIS ────────────────────────────────────── */}
       <section id="why" className="relative mx-auto max-w-5xl px-4 py-28 lg:px-8">
-        {/* section label */}
         <div className="mb-10 flex items-center gap-3">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent to-cyan-400/30" />
           <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
@@ -100,7 +96,6 @@ export default function LandingPage() {
           <div className="h-px flex-1 bg-gradient-to-l from-transparent to-cyan-400/30" />
         </div>
 
-        {/* emotional headline */}
         <h2 className="max-w-3xl text-4xl font-bold leading-[1.2] tracking-tight text-slate-50 md:text-5xl text-balance">
           Every great idea deserves a real shot.
         </h2>
@@ -132,16 +127,11 @@ export default function LandingPage() {
             Venator was built to close that gap.
           </p>
 
-          <p>
-            We give you the same structured thinking that senior architects use — presented without jargon, without judgment, and without pretending there&apos;s one right answer. Because the best engineers in the world weren&apos;t born knowing this. They learned it, often the hard way.
-          </p>
-
           <p className="text-slate-300 font-medium">
             You shouldn&apos;t have to.
           </p>
         </div>
 
-        {/* pull-quote highlight */}
         <div className="mt-14 glass-panel neon-ring rounded-2xl p-8">
           <p className="text-2xl font-semibold leading-snug text-slate-100 text-balance md:text-3xl">
             &ldquo;The best tool for your project shouldn&apos;t require 10 years of experience to discover.&rdquo;
@@ -165,9 +155,6 @@ export default function LandingPage() {
         </div>
 
         <div className="relative mt-16 grid gap-8 md:grid-cols-3">
-          {/* connecting line (desktop) */}
-          <div className="pointer-events-none absolute left-[calc(50%/3*1+50%/3*0)] right-[calc(50%/3)] top-8 hidden h-px bg-gradient-to-r from-cyan-400/30 via-fuchsia-400/30 to-cyan-400/30 md:block" />
-
           {[
             {
               step: "01",
@@ -183,7 +170,7 @@ export default function LandingPage() {
             },
             {
               step: "03",
-              icon: <Map className="h-6 w-6 text-cyan-400" />,
+              icon: <GitBranch className="h-6 w-6 text-cyan-400" />,
               title: "Visualize your architecture",
               body: "See your entire stack as an interactive, exportable graph. Share it, save it, and use it as your blueprint.",
             },
@@ -203,7 +190,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FEATURES ─────────────────────────────────────────────── */}
-      <section id="features" className="relative mx-auto max-w-7xl px-4 py-24 lg:px-8">
+      <section className="relative mx-auto max-w-7xl px-4 py-24 lg:px-8">
         <div className="text-center">
           <h2 className="text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
             Everything you need to plan right
@@ -263,7 +250,6 @@ export default function LandingPage() {
       {/* ─── FINAL CTA ────────────────────────────────────────────── */}
       <section className="relative mx-auto max-w-7xl px-4 py-24 lg:px-8">
         <div className="glass-panel neon-ring relative overflow-hidden rounded-3xl p-12 text-center md:p-20">
-          {/* inner glow */}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.08)_0%,transparent_60%)]" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-cyan-300/0 via-cyan-300/60 to-cyan-300/0" />
 
@@ -313,48 +299,5 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
-  );
-}
-
-/* ─── Mock graph nodes (visual only, no React Flow) ──────────── */
-function MockGraphPreview() {
-  const nodes = [
-    { id: "fe", label: "Next.js", sub: "Frontend", x: "20%", y: "25%" },
-    { id: "be", label: "Node.js", sub: "Backend", x: "50%", y: "25%" },
-    { id: "db", label: "PostgreSQL", sub: "Database", x: "80%", y: "25%" },
-    { id: "auth", label: "Supabase", sub: "Auth", x: "35%", y: "65%" },
-    { id: "host", label: "Vercel", sub: "Hosting", x: "65%", y: "65%" },
-  ];
-
-  return (
-    <svg className="absolute inset-0 h-full w-full" xmlns="http://www.w3.org/2000/svg">
-      {/* edges */}
-      <line x1="25%" y1="35%" x2="50%" y2="35%" stroke="rgba(34,211,238,0.3)" strokeWidth="1.5" strokeDasharray="4 3" />
-      <line x1="55%" y1="35%" x2="78%" y2="35%" stroke="rgba(34,211,238,0.3)" strokeWidth="1.5" strokeDasharray="4 3" />
-      <line x1="25%" y1="38%" x2="34%" y2="60%" stroke="rgba(167,139,250,0.25)" strokeWidth="1.5" strokeDasharray="4 3" />
-      <line x1="55%" y1="38%" x2="64%" y2="60%" stroke="rgba(34,211,238,0.2)" strokeWidth="1.5" strokeDasharray="4 3" />
-
-      {/* nodes */}
-      {nodes.map((n) => (
-        <g key={n.id} transform={`translate(${n.x}, ${n.y})`}>
-          <rect
-            x="-44"
-            y="-22"
-            width="88"
-            height="44"
-            rx="10"
-            fill="rgba(255,255,255,0.04)"
-            stroke="rgba(34,211,238,0.25)"
-            strokeWidth="1"
-          />
-          <text x="0" y="-4" textAnchor="middle" fill="rgb(226,232,240)" fontSize="11" fontWeight="600" fontFamily="Space Grotesk, sans-serif">
-            {n.label}
-          </text>
-          <text x="0" y="11" textAnchor="middle" fill="rgb(100,116,139)" fontSize="9" fontFamily="Space Grotesk, sans-serif">
-            {n.sub}
-          </text>
-        </g>
-      ))}
-    </svg>
   );
 }
