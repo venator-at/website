@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LandingPage } from "@/components/ui/venator-landing";
+import { Pricing } from "@/components/ui/pricing";
 import {
   ArrowRight,
   Brain,
@@ -245,6 +246,69 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ─── PRICING ──────────────────────────────────────────────── */}
+      <section id="pricing" className="relative mx-auto max-w-7xl px-4 lg:px-8">
+        <Pricing
+          title="Simple, Transparent Pricing"
+          description={`Choose the plan that fits your architecture needs.\nUnlock advanced AI capabilities and team collaboration as you grow.`}
+          plans={[
+            {
+              name: "STARTER",
+              price: "0",
+              yearlyPrice: "0",
+              period: "per month",
+              features: [
+                "Up to 3 architecture projects",
+                "Basic AI recommendations",
+                "PNG exports for graphs",
+                "Community support",
+                "Standard templates",
+              ],
+              description: "Perfect for students and beginners exploring software architecture",
+              buttonText: "Start Free",
+              href: "/signup",
+              isPopular: false,
+            },
+            {
+              name: "PRO",
+              price: "19",
+              yearlyPrice: "15",
+              period: "per month",
+              features: [
+                "Unlimited architecture projects",
+                "Advanced Claude AI",
+                "Interactive React Flow exports",
+                "Priority email support",
+                "Save custom templates",
+                "Downloadable markdown reports",
+              ],
+              description: "Ideal for professional developers and freelancers",
+              buttonText: "Upgrade to Pro",
+              href: "/signup",
+              isPopular: true,
+            },
+            {
+              name: "TEAM",
+              price: "49",
+              yearlyPrice: "39",
+              period: "per month",
+              features: [
+                "Everything in Pro",
+                "Team collaboration & sharing",
+                "Custom AI knowledge base",
+                "1-hour support response time",
+                "SSO Authentication",
+                "Advanced security",
+              ],
+              description: "For agencies and teams collaborating on complex systems",
+              buttonText: "Contact Sales",
+              href: "/contact",
+              isPopular: false,
+            },
+          ]}
+        />
       </section>
 
       {/* ─── FINAL CTA ────────────────────────────────────────────── */}
