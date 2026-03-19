@@ -10,9 +10,12 @@ import {
   GitBranch,
   Shield,
   Zap,
+  Reply,
+  Archive,
 } from "lucide-react";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 import { Footer2 } from "@/components/ui/footer2";
+import { EmailClientCard } from "@/components/ui/email-client-card";
 
 
 export default function HomePage() {
@@ -138,6 +141,46 @@ export default function HomePage() {
             &ldquo;The best tool for your project shouldn&apos;t require 10 years of experience to discover.&rdquo;
           </p>
           <p className="mt-4 text-sm text-slate-500">— The Venator team</p>
+        </div>
+      </section>
+
+      {/* ─── TEAM QUOTE ───────────────────────────────────────────── */}
+      <section id="team" className="relative mx-auto max-w-5xl px-4 py-20 lg:px-8">
+        <div className="mb-10 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent to-cyan-400/30" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+            The Venator team
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent to-cyan-400/30" />
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <EmailClientCard
+            avatarSrc="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+            avatarFallback="MK"
+            senderName="Matteo Köhler"
+            senderEmail="matteo@venator.dev"
+            timestamp="Today, 09:41 am"
+            message="The best tool for your project shouldn't require 10 years of experience to discover. That's why we built Venator — to make expert-level architecture decisions accessible to everyone."
+            reactions={["🚀", "❤️", "🔥"]}
+            actions={[
+              <Reply key="reply" className="w-4 h-4" />,
+              <Archive key="archive" className="w-4 h-4" />,
+            ]}
+          />
+          <EmailClientCard
+            avatarSrc="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face"
+            avatarFallback="SR"
+            senderName="Sara Rossi"
+            senderEmail="sara@venator.dev"
+            timestamp="Today, 10:03 am"
+            message="We watched too many talented developers give up — not because they couldn't code, but because the gap between idea and architecture was too wide to cross alone. Venator closes that gap."
+            reactions={["💡", "👏", "⚡️"]}
+            actions={[
+              <Reply key="reply" className="w-4 h-4" />,
+              <Archive key="archive" className="w-4 h-4" />,
+            ]}
+          />
         </div>
       </section>
 
