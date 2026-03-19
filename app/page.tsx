@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LandingPage } from "@/components/ui/venator-landing";
 import { Pricing } from "@/components/ui/pricing";
@@ -13,6 +12,7 @@ import {
   Zap,
 } from "lucide-react";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
+import { Footer2 } from "@/components/ui/footer2";
 
 
 export default function HomePage() {
@@ -310,20 +310,7 @@ export default function HomePage() {
       </section>
 
 {/* ─── FOOTER ───────────────────────────────────────────────── */}
-      <footer className="border-t border-white/5 py-10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm text-slate-600 sm:flex-row lg:px-8">
-          <div className="flex items-center gap-2 font-semibold text-slate-500">
-            <Zap className="h-4 w-4 text-cyan-600" />
-            Venator
-          </div>
-          <p>© {new Date().getFullYear()} Venator. Built for builders.</p>
-          <div className="flex gap-5">
-            <Link href="#" className="hover:text-slate-400 transition-colors">Privacy</Link>
-            <Link href="#" className="hover:text-slate-400 transition-colors">Terms</Link>
-            <Link href="#" className="hover:text-slate-400 transition-colors">Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer2 />
     </div>
   );
 }
