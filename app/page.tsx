@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LandingPage } from "@/components/ui/venator-landing";
 import { Pricing } from "@/components/ui/pricing";
+import { FeatureSteps } from "@/components/ui/feature-section";
 import {
   ArrowRight,
   Brain,
@@ -14,6 +15,7 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
+
 
 export default function HomePage() {
   const router = useRouter();
@@ -142,52 +144,38 @@ export default function HomePage() {
       </section>
 
       {/* ─── HOW IT WORKS ─────────────────────────────────────────── */}
-      <section id="how-it-works" className="relative mx-auto max-w-7xl px-4 py-24 lg:px-8">
-        <div className="text-center">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-fuchsia-400/25 bg-fuchsia-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-fuchsia-300">
-            Simple process
-          </div>
-          <h2 className="mt-2 text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
-            How it works
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-slate-400">
-            Three steps from blank page to production-ready architecture plan.
-          </p>
-        </div>
-
-        <div className="relative mt-16 grid gap-8 md:grid-cols-3">
-          {[
+      <section id="how-it-works" className="relative mx-auto max-w-7xl px-4 py-12 lg:px-8">
+        <FeatureSteps
+          title="Your Path to a Solid Tech Stack"
+          autoPlayInterval={4000}
+          imageHeight="h-[400px] lg:h-[500px]"
+          features={[
             {
-              step: "01",
-              icon: <Brain className="h-6 w-6 text-cyan-400" />,
-              title: "Describe your idea",
-              body: "Tell us what you want to build in plain language. No technical background required — just your vision.",
+              step: "Step 1",
+              title: "Describe Your Idea",
+              content: "Tell us what you want to build. Venator analyzes your project type, experience level, and overall requirements to set the baseline.",
+              image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070&auto=format&fit=crop",
             },
             {
-              step: "02",
-              icon: <Layers className="h-6 w-6 text-fuchsia-400" />,
-              title: "Get AI recommendations",
-              body: "Venator breaks your project into components and suggests 2–3 technology options for each — with honest pros, cons, and beginner-friendly explanations.",
+              step: "Step 2",
+              title: "Interactive Planning",
+              content: "A guided, step-by-step wizard helps you navigate complex architectural choices like your Backend, Database, and Infrastructure.",
+              image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop",
             },
             {
-              step: "03",
-              icon: <GitBranch className="h-6 w-6 text-cyan-400" />,
-              title: "Visualize your architecture",
-              body: "See your entire stack as an interactive, exportable graph. Share it, save it, and use it as your blueprint.",
+              step: "Step 3",
+              title: "AI Recommendations",
+              content: "Get tailored technology suggestions directly from Claude, complete with detailed pros, cons, and beginner-friendly reasoning for every choice.",
+              image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=2070&auto=format&fit=crop",
             },
-          ].map(({ step, icon, title, body }) => (
-            <div key={step} className="glass-panel relative rounded-2xl p-8">
-              <div className="mb-5 flex items-start justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 border border-white/10">
-                  {icon}
-                </div>
-                <span className="font-mono text-5xl font-bold text-white/5">{step}</span>
-              </div>
-              <h3 className="text-lg font-bold text-slate-100">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{body}</p>
-            </div>
-          ))}
-        </div>
+            {
+              step: "Step 4",
+              title: "Visualize & Export",
+              content: "See your complete architecture as a dynamic React Flow graph and download a production-ready tech stack report to start coding immediately.",
+              image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop",
+            },
+          ]}
+        />
       </section>
 
       {/* ─── FEATURES ─────────────────────────────────────────────── */}
