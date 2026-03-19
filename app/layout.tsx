@@ -15,8 +15,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Araneo Architecture Graph",
-  description: "Convert architecture JSON into an animated, interactive graph.",
+  title: "Venator — AI Architecture Advisor",
+  description: "From idea to perfect architecture in minutes. AI-powered tech stack recommendations for beginners and junior developers.",
 };
 
 export default function RootLayout({
