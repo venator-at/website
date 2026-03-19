@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 const BentoGrid = ({
   children,
@@ -63,12 +62,13 @@ const BentoCard = ({
         "pointer-events-none absolute bottom-0 flex w-full translate-y-10 transform-gpu flex-row items-center p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100",
       )}
     >
-      <Button variant="ghost" asChild size="sm" className="pointer-events-auto text-slate-300 hover:text-white">
-        <a href={href}>
-          {cta}
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </a>
-      </Button>
+      <a
+        href={href}
+        className="pointer-events-auto inline-flex items-center rounded-md px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+      >
+        {cta}
+        <ArrowRight className="ml-2 h-4 w-4" />
+      </a>
     </div>
     <div className="pointer-events-none absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-white/[.02]" />
   </div>
