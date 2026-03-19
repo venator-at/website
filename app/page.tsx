@@ -6,6 +6,7 @@ import { LandingPage } from "@/components/ui/venator-landing";
 import { Pricing } from "@/components/ui/pricing";
 import { FeatureSteps } from "@/components/ui/feature-section";
 import {
+  ArrowRight,
   Brain,
   CheckCircle2,
   GitBranch,
