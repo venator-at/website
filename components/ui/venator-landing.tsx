@@ -64,14 +64,15 @@ const AuroraBackground: React.FC = () => {
 };
 
 // --- DEFAULT DATA ---
-const defaultData = {
+const defaultData: Required<LandingPageProps> = {
   logo: { initials: 'VN', name: 'Venator' },
   navLinks: [ { label: 'Features', href: '#features' }, { label: 'How it Works', href: '#how-it-works' }, { label: 'Tech Stack', href: '#tech-stack' } ],
-  actionButton: { label: 'Start Project' },
-  hero: { titleLine1: 'Plan your next', titleLine2Gradient: 'Software Architecture', subtitle: 'An interactive platform that guides beginners and junior developers through planning complex software projects with AI-powered recommendations.', },
-  ctaButtons: { primary: { label: 'Start Project Wizard' }, secondary: { label: 'View Examples' }, },
-  features: [ { title: 'Structured Planning', description: 'Step-by-step wizard to choose your Backend, Database, Hosting, and more.', tags: ['Wizard', 'Step-by-Step'] }, { title: 'AI Recommendations', description: 'Get tailored technology suggestions with pros, cons, and beginner-friendliness.', tags: ['Claude AI', 'Guidance'] }, { title: 'Interactive Graph', description: 'Visualize your decisions as a dynamic architecture graph with React Flow.', tags: ['React Flow', 'Visualization'] }, ],
-  stats: [ { value: '10+', label: 'Tech Categories' }, { value: '100%', label: 'Beginner Friendly' }, { value: '24/7', label: 'AI Advisor' }, ],
+  actionButton: { label: 'Start Project', onClick: undefined },
+  hero: { titleLine1: 'Plan your next', titleLine2Gradient: 'Software Architecture', subtitle: 'An interactive platform that guides beginners and junior developers through planning complex software projects with AI-powered recommendations.' },
+  ctaButtons: { primary: { label: 'Start Project Wizard', onClick: undefined }, secondary: { label: 'View Examples', onClick: undefined } },
+  features: [ { title: 'Structured Planning', description: 'Step-by-step wizard to choose your Backend, Database, Hosting, and more.', tags: ['Wizard', 'Step-by-Step'], imageContent: undefined }, { title: 'AI Recommendations', description: 'Get tailored technology suggestions with pros, cons, and beginner-friendliness.', tags: ['Claude AI', 'Guidance'], imageContent: undefined }, { title: 'Interactive Graph', description: 'Visualize your decisions as a dynamic architecture graph with React Flow.', tags: ['React Flow', 'Visualization'], imageContent: undefined } ],
+  stats: [ { value: '10+', label: 'Tech Categories' }, { value: '100%', label: 'Beginner Friendly' }, { value: '24/7', label: 'AI Advisor' } ],
+  showAnimatedBackground: true,
 };
 
 // --- MAIN CUSTOMIZABLE LANDING COMPONENT ---
