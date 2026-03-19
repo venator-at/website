@@ -6,15 +6,14 @@ import { LandingPage } from "@/components/ui/venator-landing";
 import { Pricing } from "@/components/ui/pricing";
 import { FeatureSteps } from "@/components/ui/feature-section";
 import {
-  ArrowRight,
   Brain,
   CheckCircle2,
   GitBranch,
-  Layers,
   Shield,
   Sparkles,
   Zap,
 } from "lucide-react";
+import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 
 
 export default function HomePage() {
@@ -180,7 +179,7 @@ export default function HomePage() {
 
       {/* ─── FEATURES ─────────────────────────────────────────────── */}
       <section className="relative mx-auto max-w-7xl px-4 py-24 lg:px-8">
-        <div className="text-center">
+        <div className="text-center mb-16">
           <h2 className="text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
             Everything you need to plan right
           </h2>
@@ -189,51 +188,63 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              icon: <Brain className="h-5 w-5 text-cyan-400" />,
-              title: "AI-powered analysis",
-              body: "Claude AI reads your project description and tailors every recommendation to your specific use case, experience level, and budget.",
-            },
-            {
-              icon: <CheckCircle2 className="h-5 w-5 text-green-400" />,
-              title: "Honest trade-offs",
-              body: "No vendor bias. Every option comes with clear pros, cons, and real risks — so you can make an informed choice, not just follow the hype.",
-            },
-            {
-              icon: <GitBranch className="h-5 w-5 text-fuchsia-400" />,
-              title: "Interactive graph",
-              body: "Your entire architecture in one visual canvas. Drag nodes, explore connections, click for details, and export as PNG or SVG.",
-            },
-            {
-              icon: <Shield className="h-5 w-5 text-amber-400" />,
-              title: "Beginner-first language",
-              body: "Every explanation is written in plain language. No jargon without definition, no assumed knowledge, no gatekeeping.",
-            },
-            {
-              icon: <Zap className="h-5 w-5 text-cyan-400" />,
-              title: "Guided wizard",
-              body: "One decision at a time. The wizard format prevents overwhelm and keeps you moving forward, not paralyzed.",
-            },
-            {
-              icon: <Layers className="h-5 w-5 text-fuchsia-400" />,
-              title: "Exportable output",
-              body: "Download your full architecture plan as a Markdown document or save your graph as an image. Your blueprint, ready to share.",
-            },
-          ].map(({ icon, title, body }) => (
-            <div
-              key={title}
-              className="glass-panel group rounded-2xl p-7 transition-all hover:border-cyan-400/20 hover:bg-cyan-400/5"
-            >
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white/5 border border-white/10 group-hover:border-cyan-400/20 transition-colors">
-                {icon}
-              </div>
-              <h3 className="font-bold text-slate-100">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{body}</p>
-            </div>
-          ))}
-        </div>
+        <BentoGrid className="lg:grid-rows-3">
+          <BentoCard
+            name="AI-powered analysis"
+            description="Claude AI reads your project description and tailors every recommendation to your specific use case, experience level, and budget."
+            Icon={Brain}
+            href="/signup"
+            cta="Get started"
+            background={
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent" />
+            }
+            className="lg:row-start-1 lg:row-end-4 lg:col-start-2 lg:col-end-3"
+          />
+          <BentoCard
+            name="Honest trade-offs"
+            description="No vendor bias. Every option comes with clear pros, cons, and real risks — so you can make an informed choice, not just follow the hype."
+            Icon={CheckCircle2}
+            href="/signup"
+            cta="Learn more"
+            background={
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent" />
+            }
+            className="lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-3"
+          />
+          <BentoCard
+            name="Beginner-first language"
+            description="Every explanation is written in plain language. No jargon without definition, no assumed knowledge, no gatekeeping."
+            Icon={Shield}
+            href="/signup"
+            cta="Learn more"
+            background={
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent" />
+            }
+            className="lg:col-start-1 lg:col-end-2 lg:row-start-3 lg:row-end-4"
+          />
+          <BentoCard
+            name="Interactive graph"
+            description="Your entire architecture in one visual canvas. Drag nodes, explore connections, click for details, and export as PNG or SVG."
+            Icon={GitBranch}
+            href="/dashboard"
+            cta="See demo"
+            background={
+              <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/10 to-transparent" />
+            }
+            className="lg:col-start-3 lg:col-end-3 lg:row-start-1 lg:row-end-2"
+          />
+          <BentoCard
+            name="Guided wizard"
+            description="One decision at a time. The wizard format prevents overwhelm and keeps you moving forward, not paralyzed."
+            Icon={Zap}
+            href="/signup"
+            cta="Try it"
+            background={
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent" />
+            }
+            className="lg:col-start-3 lg:col-end-3 lg:row-start-2 lg:row-end-4"
+          />
+        </BentoGrid>
       </section>
 
       {/* ─── PRICING ──────────────────────────────────────────────── */}
