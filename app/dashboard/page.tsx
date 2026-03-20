@@ -492,15 +492,6 @@ export default function DashboardPage() {
       </div>
 
       {/* Sidebar */}
-      <div className="hidden lg:flex lg:shrink-0">
-        <Sidebar
-          projects={projects}
-          open={true}
-          onClose={() => {}}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      </div>
       <Sidebar
         projects={projects}
         open={sidebarOpen}
