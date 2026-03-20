@@ -7,11 +7,9 @@ import {
   GitBranch,
   LayoutDashboard,
   Loader2,
-  Menu,
   Plus,
   Search,
   Trash2,
-  Wrench,
   X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +20,7 @@ import {
 } from "@/lib/firebase/projects";
 import type { Project } from "@/types/project";
 import { VercelV0Chat } from "@/components/ui/v0-ai-chat";
+import { DashboardHeader } from "@/components/layout/DashboardHeader";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -451,23 +450,7 @@ export default function DashboardPage() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-y-auto">
         {/* Top bar */}
-        <header className="flex shrink-0 items-center justify-between border-b border-white/6 px-4 py-3 lg:px-6">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-slate-200 lg:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div className="hidden items-center gap-2 lg:flex">
-            <Wrench className="h-4 w-4 text-slate-500" />
-            <span className="text-sm text-slate-500">Dashboard</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-bold">
-              {displayName[0]?.toUpperCase()}
-            </div>
-          </div>
-        </header>
+        <DashboardHeader />
 
         {/* Hero — Start-First */}
         <section className="mx-auto w-full max-w-3xl px-4 py-12 lg:py-16">
