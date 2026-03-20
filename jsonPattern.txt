@@ -1,0 +1,46 @@
+Root-Struktur
+Es muss ein Objekt sein mit:
+components: Array
+connections: Array
+Component-Objekt
+Pflichtfelder:
+name: String, 2 bis 80 Zeichen, eindeutig (case-insensitive)
+tech: String, 2 bis 120 Zeichen
+reason: String, 8 bis 220 Zeichen
+Optionale Felder:
+alternatives: Array aus Strings, max. 12 Einträge
+risks: Array aus Strings, max. 12 Einträge
+Connection-Objekt
+Pflichtfelder:
+from: String
+to: String
+type: String
+Regeln:
+from und to müssen existierende Component-Namen referenzieren
+from darf nicht gleich to sein
+keine doppelten Verbindungen mit gleicher Richtung und gleichem type
+bei mehr als einer Component muss mindestens eine Connection existieren
+bei mehr als zwei Components dürfen keine isolierten Components übrig bleiben
+Mengenlimits
+maximal 80 Components
+maximal 300 Connections
+Template, das die AI ausfüllen kann:
+
+{
+"components": [
+{
+"name": "Component Name",
+"tech": "Technology Stack",
+"reason": "Why this is chosen",
+"alternatives": ["Alt 1", "Alt 2"],
+"risks": ["Risk 1", "Risk 2"]
+}
+],
+"connections": [
+{
+"from": "Component Name A",
+"to": "Component Name B",
+"type": "Protocol or Data Flow"
+}
+]
+}
