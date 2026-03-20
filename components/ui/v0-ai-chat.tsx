@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
@@ -10,6 +10,8 @@ import {
   Sparkles,
   Users,
   Loader2,
+  Paperclip,
+  X,
 } from "lucide-react";
 
 // ─── Auto-resize hook ──────────────────────────────────────────────────────────
@@ -44,9 +46,7 @@ function useAutoResizeTextarea({ minHeight, maxHeight }: UseAutoResizeTextareaPr
 
   useEffect(() => {
     const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = `${minHeight}px`;
-    }
+    if (textarea) textarea.style.height = `${minHeight}px`;
   }, [minHeight]);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ const STARTERS = [
   },
   {
     icon: SmartphoneNfc,
-    label: "Social Media App MVP",
+    label: "Social Media App",
     prompt:
       "Eine Social-Media-App, auf der Nutzer kurze Beiträge posten, anderen folgen und Feed-Beiträge liken können.",
   },
@@ -95,6 +95,7 @@ interface VercelV0ChatProps {
   onSubmit: () => void;
   submitting?: boolean;
   displayName?: string;
+  onFilesChange?: (files: File[]) => void;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -105,11 +106,14 @@ export function VercelV0Chat({
   onSubmit,
   submitting = false,
   displayName,
+  onFilesChange,
 }: VercelV0ChatProps) {
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
     minHeight: 72,
     maxHeight: 200,
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -138,6 +142,24 @@ export function VercelV0Chat({
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? []);
+    if (selected.length === 0) return;
+    const updated = [...attachedFiles, ...selected];
+    setAttachedFiles(updated);
+    onFilesChange?.(updated);
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    const updated = attachedFiles.filter((_, i) => i !== index);
+    setAttachedFiles(updated);
+    onFilesChange?.(updated);
+  };
+
+  const hasContent = value.trim().length > 0 || attachedFiles.length > 0;
+
   return (
     <div className="flex flex-col items-center w-full max-w-3xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold tracking-tight text-center text-slate-50 md:text-4xl text-balance">
@@ -157,50 +179,89 @@ export function VercelV0Chat({
       <div className="w-full">
         <div
           className={cn(
-            "relative rounded-2xl border transition-all duration-300 bg-slate-900/80 backdrop-blur-sm",
-            value.length > 0
+            "rounded-2xl border transition-all duration-300 bg-slate-900/80 backdrop-blur-sm",
+            hasContent
               ? "border-cyan-400/50 shadow-[0_0_0_4px_rgba(34,211,238,0.08),0_0_32px_rgba(34,211,238,0.12)]"
               : "border-white/10"
           )}
         >
-          <div className="overflow-y-auto">
-            <Textarea
-              ref={textareaRef}
-              value={value}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Beschreibe deine App-Idee (z.B. Ein Marktplatz für gebrauchte Fahrräder)…"
-              className={cn(
-                "w-full px-5 py-4 pr-14",
-                "resize-none",
-                "bg-transparent",
-                "border-none",
-                "text-slate-200 text-sm",
-                "focus:outline-none",
-                "focus-visible:ring-0 focus-visible:ring-offset-0",
-                "placeholder:text-slate-600 placeholder:text-sm",
-                "min-h-[72px]"
-              )}
-              style={{ overflow: "hidden" }}
-            />
-          </div>
+          {/* Textarea */}
+          <Textarea
+            ref={textareaRef}
+            value={value}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Beschreibe deine App-Idee (z.B. Ein Marktplatz für gebrauchte Fahrräder)…"
+            className={cn(
+              "w-full px-5 py-4",
+              "resize-none",
+              "bg-transparent",
+              "border-none",
+              "text-slate-200 text-sm",
+              "focus:outline-none",
+              "focus-visible:ring-0 focus-visible:ring-offset-0",
+              "placeholder:text-slate-600 placeholder:text-sm",
+              "min-h-[72px]"
+            )}
+            style={{ overflow: "hidden" }}
+          />
 
-          <div className="flex items-center justify-end p-3">
+          {/* Attached file chips */}
+          {attachedFiles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 px-5 pb-2">
+              {attachedFiles.map((file, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 rounded-full bg-slate-800 border border-white/10 px-2.5 py-0.5 text-[11px] text-slate-300 max-w-[180px]"
+                >
+                  <span className="truncate">{file.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(i)}
+                    className="shrink-0 text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Bottom bar */}
+          <div className="flex items-center justify-between px-3 py-2">
+            {/* File upload */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+            >
+              <Paperclip className="h-4 w-4" />
+              <span className="text-xs">Anhang</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            {/* Send button */}
             <button
               type="button"
               onClick={handleSubmitClick}
               disabled={!value.trim() || submitting}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-xl transition-all border",
+                "flex h-8 w-8 items-center justify-center rounded-lg transition-all border",
                 value.trim() && !submitting
                   ? "bg-cyan-500 border-cyan-400 text-slate-950 hover:bg-cyan-400"
                   : "bg-transparent border-zinc-700 text-zinc-500 cursor-not-allowed opacity-40"
               )}
             >
               {submitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
               ) : (
-                <ArrowUpIcon className="w-4 h-4" />
+                <ArrowUpIcon className="h-3.5 w-3.5" />
               )}
               <span className="sr-only">Senden</span>
             </button>
