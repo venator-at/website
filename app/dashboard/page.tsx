@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
+  Check,
+  Copy,
   GitBranch,
   LayoutDashboard,
   Loader2,
@@ -86,6 +88,32 @@ function TechBadge({ tech }: { tech: string }) {
     >
       {tech}
     </span>
+  );
+}
+
+function SidebarGroup({
+  label,
+  items,
+}: {
+  label: string;
+  items: Project[];
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mb-4">
+      <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+        {label}
+      </p>
+      {items.map((p) => (
+        <button
+          key={p.id}
+          className="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200"
+        >
+          <LayoutDashboard className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
+          <span className="line-clamp-2 leading-snug">{p.title}</span>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -274,32 +302,6 @@ function Sidebar({
 
   const grouped = groupProjectsByTime(filtered);
 
-  function SidebarGroup({
-    label,
-    items,
-  }: {
-    label: string;
-    items: Project[];
-  }) {
-    if (items.length === 0) return null;
-    return (
-      <div className="mb-4">
-        <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-          {label}
-        </p>
-        {items.map((p) => (
-          <button
-            key={p.id}
-            className="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200"
-          >
-            <LayoutDashboard className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
-            <span className="line-clamp-2 leading-snug">{p.title}</span>
-          </button>
-        ))}
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Mobile overlay */}
@@ -377,6 +379,10 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [prompt, setPrompt] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [generatingJson, setGeneratingJson] = useState(false);
+  const [generatedJson, setGeneratedJson] = useState("");
+  const [generateError, setGenerateError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -420,6 +426,52 @@ export default function DashboardPage() {
     await deleteProject(id);
   }, []);
 
+  const handleGenerateJson = useCallback(async () => {
+    const idea = prompt.trim();
+    if (!idea || generatingJson) return;
+
+    setGeneratingJson(true);
+    setGenerateError("");
+    setCopied(false);
+
+    try {
+      const response = await fetch("/api/ai/generate-json", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ idea }),
+      });
+
+      const data = (await response.json()) as {
+        jsonText?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !data.jsonText) {
+        setGenerateError(data.error ?? "Die KI-Antwort konnte nicht verarbeitet werden.");
+        return;
+      }
+
+      setGeneratedJson(data.jsonText);
+    } catch {
+      setGenerateError("Die Anfrage ist fehlgeschlagen. Bitte versuche es erneut.");
+    } finally {
+      setGeneratingJson(false);
+    }
+  }, [prompt, generatingJson]);
+
+  const handleCopyJson = useCallback(async () => {
+    if (!generatedJson) return;
+    try {
+      await navigator.clipboard.writeText(generatedJson);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1200);
+    } catch {
+      setCopied(false);
+    }
+  }, [generatedJson]);
+
   const displayName = user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "there";
 
   if (authLoading) {
@@ -461,6 +513,50 @@ export default function DashboardPage() {
             submitting={submitting}
             displayName={displayName}
           />
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void handleGenerateJson()}
+              disabled={!prompt.trim() || generatingJson}
+              className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-500/20 px-4 py-2 text-sm font-medium text-cyan-200 transition-colors hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {generatingJson ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <GitBranch className="h-4 w-4" />
+              )}
+              JSON mit KI generieren
+            </button>
+
+            {generatedJson && (
+              <button
+                type="button"
+                onClick={() => void handleCopyJson()}
+                className="inline-flex items-center gap-2 rounded-lg border border-white/12 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copied ? "Kopiert" : "JSON kopieren"}
+              </button>
+            )}
+          </div>
+
+          {generateError && (
+            <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {generateError}
+            </div>
+          )}
+
+          {generatedJson && (
+            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70">
+              <div className="border-b border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
+                Generiertes Architektur-JSON
+              </div>
+              <pre className="max-h-[420px] overflow-auto p-4 text-xs leading-relaxed text-slate-200">
+                <code>{generatedJson}</code>
+              </pre>
+            </div>
+          )}
         </section>
 
         {/* Project grid */}

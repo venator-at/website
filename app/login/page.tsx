@@ -100,6 +100,7 @@ export default function LoginPage() {
       await signInWithEmail(email, password);
       router.push('/dashboard');
     } catch (err: unknown) {
+      console.error('Login failed:', err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -113,6 +114,7 @@ export default function LoginPage() {
       await signInWithGoogle();
       router.push('/dashboard');
     } catch (err: unknown) {
+      console.error('Google login failed:', err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -193,6 +195,8 @@ function getErrorMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'code' in err) {
     const code = (err as { code: string }).code;
     switch (code) {
+      case 'auth/not-configured':
+        return 'Firebase ist nicht konfiguriert. Bitte .env.local mit NEXT_PUBLIC_FIREBASE_* Variablen ausfuellen und Dev-Server neu starten.';
       case 'auth/user-not-found':
       case 'auth/wrong-password':
       case 'auth/invalid-credential':

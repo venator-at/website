@@ -104,6 +104,7 @@ export default function SignupPage() {
       await signUpWithEmail(email, password);
       router.push('/dashboard');
     } catch (err: unknown) {
+      console.error('Signup failed:', err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -117,6 +118,7 @@ export default function SignupPage() {
       await signInWithGoogle();
       router.push('/dashboard');
     } catch (err: unknown) {
+      console.error('Google signup failed:', err);
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
@@ -197,6 +199,8 @@ function getErrorMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'code' in err) {
     const code = (err as { code: string }).code;
     switch (code) {
+      case 'auth/not-configured':
+        return 'Firebase ist nicht konfiguriert. Bitte .env.local mit NEXT_PUBLIC_FIREBASE_* Variablen ausfuellen und Dev-Server neu starten.';
       case 'auth/email-already-in-use':
         return 'Ein Konto mit dieser E-Mail-Adresse existiert bereits.';
       case 'auth/weak-password':
