@@ -37,17 +37,25 @@ function basicArchitectureShapeValidation(value: unknown): { ok: true } | { ok: 
 }
 
 export async function POST(request: Request) {
+  const requestId = crypto.randomUUID();
+  const respond = (body: Record<string, unknown>, status: number) => {
+    const response = NextResponse.json({ ...body, requestId }, { status });
+    response.headers.set("x-request-id", requestId);
+    return response;
+  };
+
   try {
     const body = (await request.json()) as GenerateJsonRequest;
     const idea = body.idea?.trim();
 
     console.log("[AI ROUTE] Request received", {
+      requestId,
       hasIdea: Boolean(idea),
       ideaLength: idea?.length ?? 0,
     });
 
     if (!idea) {
-      return NextResponse.json({ error: "Please provide an idea." }, { status: 400 });
+      return respond({ error: "Please provide an idea." }, 400);
     }
 
     // Support both key names:
@@ -61,12 +69,12 @@ export async function POST(request: Request) {
     const model = process.env.GOOGLE_AI_MODEL || "gemini-3-flash-preview";
 
     if (!apiKey) {
-      return NextResponse.json(
+      return respond(
         {
           error:
             "Missing Google AI key. On Vercel set GOOGLE_AI_STUDIO_API_KEY or GOOGLE_API_KEY (or GEMINI_API_KEY) in Environment Variables, then redeploy.",
         },
-        { status: 500 },
+        500,
       );
     }
 
@@ -109,12 +117,13 @@ export async function POST(request: Request) {
       }
 
       console.error("[AI ROUTE] Gemini request failed", {
+        requestId,
         status: response.status,
         body: errorText,
       });
-      return NextResponse.json(
+      return respond(
         { error: `Gemini request failed (${model}): ${response.status} ${errorText}${hint}` },
-        { status: 502 },
+        502,
       );
     }
 
@@ -133,9 +142,9 @@ export async function POST(request: Request) {
         .trim() ?? "";
 
     if (!generatedText) {
-      return NextResponse.json(
+      return respond(
         { error: "Gemini returned no text output." },
-        { status: 502 },
+        502,
       );
     }
 
@@ -145,32 +154,35 @@ export async function POST(request: Request) {
     try {
       parsed = JSON.parse(jsonText);
     } catch {
-      return NextResponse.json(
+      return respond(
         {
           error: "Gemini output was not valid JSON.",
           raw: generatedText,
         },
-        { status: 502 },
+        502,
       );
     }
 
     const shapeCheck = basicArchitectureShapeValidation(parsed);
     if (!shapeCheck.ok) {
-      return NextResponse.json(
+      return respond(
         {
           error: shapeCheck.error,
           raw: parsed,
         },
-        { status: 502 },
+        502,
       );
     }
 
-    return NextResponse.json({
-      jsonText: JSON.stringify(parsed, null, 2),
-    });
+    return respond(
+      {
+        jsonText: JSON.stringify(parsed, null, 2),
+      },
+      200,
+    );
   } catch (error) {
-    console.error("[AI ROUTE] Unexpected server error", error);
+    console.error("[AI ROUTE] Unexpected server error", { requestId, error });
     const message = error instanceof Error ? error.message : "Unknown server error.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return respond({ error: message }, 500);
   }
 }

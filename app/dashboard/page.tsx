@@ -440,6 +440,7 @@ export default function DashboardPage() {
   const [submitting, setSubmitting] = useState(false);
   const [generatingJson, setGeneratingJson] = useState(false);
   const [generateError, setGenerateError] = useState("");
+  const [requestTrace, setRequestTrace] = useState("");
   const [graphNodes, setGraphNodes] = useState<ArchitectureNode[]>([]);
   const [graphEdges, setGraphEdges] = useState<ArchitectureEdge[]>([]);
   const [selectedComponent, setSelectedComponent] = useState<ArchitectureComponentInput | null>(null);
@@ -594,7 +595,16 @@ export default function DashboardPage() {
       e?.preventDefault();
       const idea = prompt.trim();
 
-      if (!idea || submitting || generatingJson) return;
+      if (!idea) {
+        setGenerateError("Bitte gib zuerst eine Idee ein.");
+        setRequestTrace("Kein POST gesendet: Eingabe ist leer.");
+        return;
+      }
+
+      if (submitting || generatingJson) {
+        setRequestTrace("Kein neuer POST: Anfrage laeuft bereits.");
+        return;
+      }
 
       console.log("[DashboardSubmit] Submit started", {
         ideaLength: idea.length,
@@ -604,25 +614,11 @@ export default function DashboardPage() {
       setSubmitting(true);
       setGeneratingJson(true);
       setGenerateError("");
+      setRequestTrace("POST /api/ai/generate-json wird gesendet...");
       setSelectedComponent(null);
       setDetailsOpen(false);
 
       try {
-        if (firebaseConfigured && user) {
-          try {
-            await createProject({
-              userId: user.uid,
-              title: generateTitle(idea),
-              prompt: idea,
-              status: "draft",
-              techStackArray: [],
-              componentCount: 0,
-            });
-          } catch {
-            // Graph generation should still work even if project persistence fails.
-          }
-        }
-
         const response = await fetch("/api/ai/generate-json", {
           method: "POST",
           headers: {
@@ -631,18 +627,26 @@ export default function DashboardPage() {
           body: JSON.stringify({ idea }),
         });
 
+        const responseRequestId = response.headers.get("x-request-id") ?? "n/a";
         console.log("[DashboardSubmit] AI route response status", response.status);
+        console.log("[DashboardSubmit] AI route request id", responseRequestId);
+        setRequestTrace(
+          `POST erfolgreich gesendet. HTTP ${response.status}. Request-ID: ${responseRequestId}`,
+        );
 
         const data = (await response.json()) as {
           jsonText?: string;
           error?: string;
+          requestId?: string;
         };
+
+        const requestId = data.requestId ?? responseRequestId;
 
         if (!response.ok || !data.jsonText) {
           console.error("[DashboardSubmit] AI route failed", data.error ?? "Unknown error");
           buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
           setGenerateError(
-            "KI-Antwort fehlgeschlagen. Fallback-Graph wurde lokal erstellt.",
+            `KI-Antwort fehlgeschlagen (Request-ID: ${requestId}). Fallback-Graph wurde lokal erstellt.`,
           );
           return;
         }
@@ -651,6 +655,19 @@ export default function DashboardPage() {
 
         if (graphBuilt) {
           setPrompt("");
+
+          if (firebaseConfigured && user) {
+            void createProject({
+              userId: user.uid,
+              title: generateTitle(idea),
+              prompt: idea,
+              status: "draft",
+              techStackArray: [],
+              componentCount: 0,
+            }).catch((persistError) => {
+              console.warn("[DashboardSubmit] Draft save failed (non-blocking)", persistError);
+            });
+          }
         } else {
           buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
           setGenerateError(
@@ -659,6 +676,7 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error("[DashboardSubmit] Unexpected submit error", error);
+        setRequestTrace("POST fehlgeschlagen vor Antwort (Netzwerk/Blocker/CORS).");
         buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
         setGenerateError("Die Anfrage ist fehlgeschlagen. Fallback-Graph wurde lokal erstellt.");
       } finally {
@@ -740,6 +758,12 @@ export default function DashboardPage() {
             {generateError && (
               <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
                 {generateError}
+              </div>
+            )}
+
+            {requestTrace && (
+              <div className="mt-3 rounded-xl border border-slate-500/30 bg-slate-900/60 px-3 py-2 text-xs text-slate-300">
+                {requestTrace}
               </div>
             )}
           </div>
