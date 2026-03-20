@@ -5,7 +5,6 @@ import {
   doc,
   query,
   where,
-  orderBy,
   onSnapshot,
   serverTimestamp,
   type Unsubscribe,
@@ -60,12 +59,21 @@ export function subscribeToProjects(
   const q = query(
     collection(db, "projects"),
     where("userId", "==", userId),
-    orderBy("createdAt", "desc"),
   );
-  return onSnapshot(q, (snap) => {
-    const projects = snap.docs.map((d) =>
-      fromFirestore(d.id, d.data() as Record<string, unknown>),
-    );
-    callback(projects);
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      const projects = snap.docs
+        .map((d) => fromFirestore(d.id, d.data() as Record<string, unknown>))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      callback(projects);
+    },
+    (error) => {
+      console.error("[Firestore] subscribeToProjects failed", {
+        code: error.code,
+        message: error.message,
+      });
+      callback([]);
+    },
+  );
 }
