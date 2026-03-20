@@ -3,6 +3,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Database, Server, Cloud, Code, Globe, Cpu, Shield, Layers } from 'lucide-react';
 import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/auth';
 import {
@@ -158,9 +159,7 @@ export default function LoginPage() {
           href="/"
           className="absolute top-6 left-6 inline-flex items-center gap-2 z-10"
         >
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-sm font-bold">
-            VN
-          </div>
+          <Image src="/logo.png" alt="Venator" width={32} height={32} className="rounded-lg" />
           <span className="text-lg font-bold text-slate-100">Venator</span>
         </Link>
       </span>
@@ -172,9 +171,7 @@ export default function LoginPage() {
           href="/"
           className="lg:hidden inline-flex items-center gap-2 mb-8"
         >
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-sm font-bold">
-            VN
-          </div>
+          <Image src="/logo.png" alt="Venator" width={32} height={32} className="rounded-lg" />
           <span className="text-xl font-bold text-slate-100">Venator</span>
         </Link>
 
