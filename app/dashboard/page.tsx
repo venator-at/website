@@ -1,381 +1,628 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
-import { GraphCanvas } from "@/components/graph/graph-canvas";
-import { JsonEditor } from "@/components/input/json-editor";
-import { ComponentDetailsSheet } from "@/components/panels/component-details-sheet";
-import { layoutGraph } from "@/lib/graph/layout";
+import { useRouter } from "next/navigation";
 import {
-  parseArchitectureJson,
-  transformArchitectureToGraph,
-} from "@/lib/graph/transform";
-import type {
-  ArchitectureComponentInput,
-  ArchitectureEdge,
-  ArchitectureNode,
-} from "@/types/architecture";
+  ArrowRight,
+  GitBranch,
+  LayoutDashboard,
+  Loader2,
+  Menu,
+  Plus,
+  Search,
+  ShoppingCart,
+  SmartphoneNfc,
+  Sparkles,
+  Trash2,
+  Users,
+  Wrench,
+  X,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  createProject,
+  deleteProject,
+  subscribeToProjects,
+} from "@/lib/firebase/projects";
+import type { Project } from "@/types/project";
 
-const JSON_EXAMPLES = [
-  {
-    id: "microservices-platform",
-    name: "Microservices Platform",
-    description: "Gateway + event bus + cache + observability",
-    json: `{
-  "components": [
-    {
-      "name": "Web Frontend",
-      "tech": "Next.js 15 + Tailwind",
-      "reason": "Fast UX iteration with server rendering support",
-      "alternatives": ["Nuxt", "SvelteKit"],
-      "risks": ["Hydration bugs with mixed server/client state"]
-    },
-    {
-      "name": "API Gateway",
-      "tech": "Kong",
-      "reason": "Single ingress with routing and auth policies",
-      "alternatives": ["NGINX", "Traefik"],
-      "risks": ["Central bottleneck if not scaled"]
-    },
-    {
-      "name": "Auth Service",
-      "tech": "Node.js + Fastify",
-      "reason": "Low-latency token issuance with extensible plugins",
-      "alternatives": ["Spring Boot", "Go Fiber"],
-      "risks": ["Token revocation complexity"]
-    },
-    {
-      "name": "Order Service",
-      "tech": "Node.js + NestJS",
-      "reason": "Strong modular structure for domain-driven logic",
-      "alternatives": ["Express", "Django"],
-      "risks": ["Service sprawl in larger teams"]
-    },
-    {
-      "name": "Payment Service",
-      "tech": "Node.js + Express",
-      "reason": "Mature ecosystem for payment SDK integrations",
-      "alternatives": ["Spring Boot", "Rails"],
-      "risks": ["Security and compliance burden"]
-    },
-    {
-      "name": "Event Bus",
-      "tech": "Apache Kafka",
-      "reason": "Reliable async communication and replay",
-      "alternatives": ["RabbitMQ", "NATS"],
-      "risks": ["Operational overhead"]
-    },
-    {
-      "name": "Cache",
-      "tech": "Redis",
-      "reason": "Fast session and hot-data access",
-      "alternatives": ["Memcached", "Dragonfly"],
-      "risks": ["Data consistency pitfalls"]
-    },
-    {
-      "name": "Primary Database",
-      "tech": "PostgreSQL",
-      "reason": "Strong consistency and transaction support",
-      "alternatives": ["MySQL", "CockroachDB"],
-      "risks": ["Migration coordination"]
-    },
-    {
-      "name": "Observability",
-      "tech": "Prometheus + Grafana",
-      "reason": "Metrics, dashboards, and alerting visibility",
-      "alternatives": ["Datadog", "New Relic"],
-      "risks": ["Alert fatigue"]
-    }
-  ],
-  "connections": [
-    { "from": "Web Frontend", "to": "API Gateway", "type": "HTTPS" },
-    { "from": "API Gateway", "to": "Auth Service", "type": "REST" },
-    { "from": "API Gateway", "to": "Order Service", "type": "REST" },
-    { "from": "API Gateway", "to": "Payment Service", "type": "REST" },
-    { "from": "Order Service", "to": "Primary Database", "type": "SQL" },
-    { "from": "Auth Service", "to": "Primary Database", "type": "SQL" },
-    { "from": "Order Service", "to": "Cache", "type": "Read/Write Cache" },
-    { "from": "Payment Service", "to": "Event Bus", "type": "Publish Event" },
-    { "from": "Order Service", "to": "Event Bus", "type": "Publish Event" },
-    { "from": "Observability", "to": "Auth Service", "type": "Metrics Scrape" },
-    { "from": "Observability", "to": "Order Service", "type": "Metrics Scrape" },
-    { "from": "Observability", "to": "Payment Service", "type": "Metrics Scrape" }
-  ]
-}`,
-  },
-  {
-    id: "serverless-analytics",
-    name: "Serverless Analytics",
-    description: "Ingestion pipeline with data lake and warehouse",
-    json: `{
-  "components": [
-    {
-      "name": "Marketing Site",
-      "tech": "Next.js",
-      "reason": "SEO-friendly frontend with rapid deployment",
-      "alternatives": ["Astro", "Gatsby"],
-      "risks": ["Runtime mismatch between edge and node"]
-    },
-    {
-      "name": "Edge API",
-      "tech": "Cloudflare Workers",
-      "reason": "Global low-latency request handling",
-      "alternatives": ["Lambda@Edge", "Fastly Compute"],
-      "risks": ["Runtime constraints for libraries"]
-    },
-    {
-      "name": "Event Queue",
-      "tech": "AWS SQS",
-      "reason": "Decouples traffic spikes from processing",
-      "alternatives": ["Kafka", "Pub/Sub"],
-      "risks": ["Visibility timeout tuning"]
-    },
-    {
-      "name": "Ingestion Worker",
-      "tech": "AWS Lambda",
-      "reason": "Cost-efficient event transformation",
-      "alternatives": ["Cloud Run Jobs", "Azure Functions"],
-      "risks": ["Cold starts under burst load"]
-    },
-    {
-      "name": "Data Lake",
-      "tech": "S3",
-      "reason": "Cheap durable storage for raw events",
-      "alternatives": ["GCS", "Azure Blob"],
-      "risks": ["Unbounded data growth"]
-    },
-    {
-      "name": "Warehouse",
-      "tech": "BigQuery",
-      "reason": "Fast analytical queries at scale",
-      "alternatives": ["Snowflake", "Redshift"],
-      "risks": ["Cost spikes with poor query discipline"]
-    },
-    {
-      "name": "BI Dashboard",
-      "tech": "Metabase",
-      "reason": "Quick internal analytics access",
-      "alternatives": ["Looker", "Superset"],
-      "risks": ["Permission misconfiguration"]
-    }
-  ],
-  "connections": [
-    { "from": "Marketing Site", "to": "Edge API", "type": "HTTPS" },
-    { "from": "Edge API", "to": "Event Queue", "type": "Enqueue" },
-    { "from": "Event Queue", "to": "Ingestion Worker", "type": "Trigger" },
-    { "from": "Ingestion Worker", "to": "Data Lake", "type": "Object Write" },
-    { "from": "Ingestion Worker", "to": "Warehouse", "type": "Batch Upsert" },
-    { "from": "BI Dashboard", "to": "Warehouse", "type": "Read Query" }
-  ]
-}`,
-  },
-  {
-    id: "ai-rag-product",
-    name: "AI RAG Product",
-    description: "LLM app with retrieval and background indexing",
-    json: `{
-  "components": [
-    {
-      "name": "Chat Frontend",
-      "tech": "Next.js + React",
-      "reason": "Streaming UI and app-router ergonomics",
-      "alternatives": ["Remix", "Vue"],
-      "risks": ["Streaming UI complexity"]
-    },
-    {
-      "name": "API Backend",
-      "tech": "NestJS",
-      "reason": "Structured module system and guard support",
-      "alternatives": ["Fastify", "Spring Boot"],
-      "risks": ["Added framework overhead"]
-    },
-    {
-      "name": "Auth Provider",
-      "tech": "Auth0",
-      "reason": "Managed auth lifecycle and enterprise features",
-      "alternatives": ["Clerk", "Keycloak"],
-      "risks": ["Vendor lock-in"]
-    },
-    {
-      "name": "Object Storage",
-      "tech": "S3",
-      "reason": "Document source of truth",
-      "alternatives": ["GCS", "R2"],
-      "risks": ["Permission misconfigurations"]
-    },
-    {
-      "name": "Indexer Worker",
-      "tech": "Python + Celery",
-      "reason": "Strong NLP ecosystem for parsing",
-      "alternatives": ["Ray", "RQ"],
-      "risks": ["Queue tuning complexity"]
-    },
-    {
-      "name": "Vector Store",
-      "tech": "pgvector",
-      "reason": "Unified relational and vector data",
-      "alternatives": ["Pinecone", "Weaviate"],
-      "risks": ["Recall degradation without tuning"]
-    },
-    {
-      "name": "Relational DB",
-      "tech": "PostgreSQL",
-      "reason": "Metadata consistency and joins",
-      "alternatives": ["MySQL", "MariaDB"],
-      "risks": ["Schema migration errors"]
-    },
-    {
-      "name": "LLM Gateway",
-      "tech": "OpenRouter",
-      "reason": "Model routing and fallback handling",
-      "alternatives": ["Direct OpenAI", "Azure OpenAI"],
-      "risks": ["Provider variability"]
-    }
-  ],
-  "connections": [
-    { "from": "Chat Frontend", "to": "API Backend", "type": "HTTPS" },
-    { "from": "Chat Frontend", "to": "Auth Provider", "type": "OIDC" },
-    { "from": "API Backend", "to": "Relational DB", "type": "SQL" },
-    { "from": "API Backend", "to": "Vector Store", "type": "Similarity Search" },
-    { "from": "API Backend", "to": "LLM Gateway", "type": "Completion API" },
-    { "from": "Object Storage", "to": "Indexer Worker", "type": "Ingest Trigger" },
-    { "from": "Indexer Worker", "to": "Vector Store", "type": "Embedding Upsert" },
-    { "from": "Indexer Worker", "to": "Relational DB", "type": "Metadata Upsert" }
-  ]
-}`,
-  },
-] as const;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export default function Dashboard() {
-  const [jsonInput, setJsonInput] = useState<string>(JSON_EXAMPLES[0].json);
-  const [activeExampleId, setActiveExampleId] = useState<string>(JSON_EXAMPLES[0].id);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [nodes, setNodes] = useState<ArchitectureNode[]>([]);
-  const [edges, setEdges] = useState<ArchitectureEdge[]>([]);
-  const [selectedComponent, setSelectedComponent] =
-    useState<ArchitectureComponentInput | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+function generateTitle(prompt: string): string {
+  const trimmed = prompt.trim();
+  if (trimmed.length <= 40) return trimmed;
+  return trimmed.slice(0, 37) + "…";
+}
 
-  const renderVersionRef = useRef(0);
-  const timerRef = useRef<number | null>(null);
+function groupProjectsByTime(projects: Project[]) {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOf7Days = new Date(startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000);
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const clearPendingTimer = useCallback(() => {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
+  const today: Project[] = [];
+  const last7: Project[] = [];
+  const lastMonth: Project[] = [];
+  const older: Project[] = [];
 
-  useEffect(() => {
-    return () => {
-      clearPendingTimer();
-    };
-  }, [clearPendingTimer]);
+  for (const p of projects) {
+    const d = p.createdAt;
+    if (d >= startOfToday) today.push(p);
+    else if (d >= startOf7Days) last7.push(p);
+    else if (d >= startOfMonth) lastMonth.push(p);
+    else older.push(p);
+  }
 
-  const handleGenerateGraph = useCallback(() => {
-    const parseResult = parseArchitectureJson(jsonInput);
+  return { today, last7, lastMonth, older };
+}
 
-    if (!parseResult.ok) {
-      clearPendingTimer();
-      setIsLoading(false);
-      setError(parseResult.error);
-      return;
-    }
+const STATUS_COLORS: Record<Project["status"], string> = {
+  draft: "bg-amber-400/15 text-amber-300 border-amber-400/25",
+  "in-progress": "bg-blue-400/15 text-blue-300 border-blue-400/25",
+  completed: "bg-emerald-400/15 text-emerald-300 border-emerald-400/25",
+};
+const STATUS_LABELS: Record<Project["status"], string> = {
+  draft: "Entwurf",
+  "in-progress": "In Arbeit",
+  completed: "Abgeschlossen",
+};
 
-    renderVersionRef.current += 1;
+const TECH_COLORS: Record<string, string> = {
+  "Next.js": "bg-slate-700 text-slate-200",
+  React: "bg-cyan-900/60 text-cyan-300",
+  "Node.js": "bg-green-900/60 text-green-300",
+  PostgreSQL: "bg-blue-900/60 text-blue-300",
+  Firebase: "bg-amber-900/60 text-amber-300",
+  Supabase: "bg-emerald-900/60 text-emerald-300",
+  Tailwind: "bg-sky-900/60 text-sky-300",
+  TypeScript: "bg-blue-800/60 text-blue-200",
+  Python: "bg-yellow-900/60 text-yellow-300",
+  FastAPI: "bg-teal-900/60 text-teal-300",
+  MongoDB: "bg-green-800/60 text-green-200",
+  Stripe: "bg-violet-900/60 text-violet-300",
+};
 
-    const transformed = transformArchitectureToGraph(
-      parseResult.data,
-      renderVersionRef.current,
-    );
-    const direction = parseResult.data.components.length > 14 ? "TB" : "LR";
-    const layouted = layoutGraph(transformed.nodes, transformed.edges, direction);
+function TechBadge({ tech }: { tech: string }) {
+  const cls = TECH_COLORS[tech] ?? "bg-slate-700 text-slate-300";
+  return (
+    <span
+      className={`inline-flex h-6 items-center rounded-full px-2.5 text-[10px] font-semibold ${cls}`}
+    >
+      {tech}
+    </span>
+  );
+}
 
-    clearPendingTimer();
-    setError(null);
-    setIsLoading(true);
-    setIsSheetOpen(false);
-    setSelectedComponent(null);
+// ─── Abstract SVG placeholder for card background ─────────────────────────────
 
-    timerRef.current = window.setTimeout(() => {
-      setNodes(layouted.nodes);
-      setEdges(layouted.edges);
-      setIsLoading(false);
-      timerRef.current = null;
-    }, 2000);
-  }, [clearPendingTimer, jsonInput]);
+function AbstractGraph({ seed }: { seed: number }) {
+  const hue = (seed * 47) % 360;
+  const hue2 = (hue + 120) % 360;
+  return (
+    <svg
+      viewBox="0 0 300 100"
+      className="w-full h-full opacity-30"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <radialGradient id={`g${seed}`} cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor={`hsl(${hue},70%,60%)`} stopOpacity="0.8" />
+          <stop offset="100%" stopColor={`hsl(${hue2},60%,40%)`} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="300" height="100" fill={`url(#g${seed})`} />
+      {[...Array(5)].map((_, i) => {
+        const x1 = ((seed * (i + 3) * 37) % 260) + 20;
+        const y1 = ((seed * (i + 1) * 61) % 70) + 15;
+        const x2 = ((seed * (i + 7) * 53) % 260) + 20;
+        const y2 = ((seed * (i + 2) * 79) % 70) + 15;
+        return (
+          <line
+            key={i}
+            x1={x1}
+            y1={y1}
+            x2={x2}
+            y2={y2}
+            stroke={`hsl(${hue},80%,70%)`}
+            strokeWidth="1.5"
+            strokeOpacity="0.6"
+          />
+        );
+      })}
+      {[...Array(4)].map((_, i) => {
+        const cx = ((seed * (i + 5) * 41) % 260) + 20;
+        const cy = ((seed * (i + 3) * 67) % 70) + 15;
+        return (
+          <circle
+            key={i}
+            cx={cx}
+            cy={cy}
+            r={4 + (i % 3) * 2}
+            fill={`hsl(${hue2},70%,65%)`}
+            fillOpacity="0.7"
+          />
+        );
+      })}
+    </svg>
+  );
+}
 
-  const handleSelectNode = useCallback((component: ArchitectureComponentInput) => {
-    setSelectedComponent(component);
-    setIsSheetOpen(true);
-  }, []);
+// ─── Project Card ─────────────────────────────────────────────────────────────
 
-  const handleLoadExample = useCallback((exampleId: string) => {
-    const example = JSON_EXAMPLES.find((item) => item.id === exampleId);
+function ProjectCard({
+  project,
+  index,
+  onDelete,
+}: {
+  project: Project;
+  index: number;
+  onDelete: (id: string) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
-    if (!example) {
-      return;
-    }
-
-    setJsonInput(example.json);
-    setActiveExampleId(example.id);
-    setError(null);
-  }, []);
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    setDeleting(true);
+    await onDelete(project.id);
+  }
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <div className="pointer-events-none absolute -left-40 top-10 -z-10 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl animate-pulse" />
-      <div className="pointer-events-none absolute -right-32 top-28 -z-10 h-[28rem] w-[28rem] rounded-full bg-fuchsia-500/15 blur-3xl animate-pulse [animation-delay:700ms]" />
-      <div className="pointer-events-none absolute bottom-[-10rem] left-1/2 -z-10 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-amber-300/10 blur-3xl" />
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(15,23,42,0.35),rgba(2,6,23,0.85))]" />
+    <div
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-slate-900/60 backdrop-blur-sm transition-all duration-200 hover:border-cyan-400/30 hover:shadow-[0_0_24px_rgba(34,211,238,0.08)] cursor-pointer"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Graph preview */}
+      <div className="relative h-24 overflow-hidden bg-slate-800/40">
+        <AbstractGraph seed={index + 1} />
+        {/* Status badge */}
+        <span
+          className={`absolute top-3 right-3 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[project.status]}`}
+        >
+          {STATUS_LABELS[project.status]}
+        </span>
 
-      <main className="mx-auto flex w-full max-w-[1700px] flex-col gap-6 px-4 py-6 lg:px-8 lg:py-8">
-        <header className="glass-panel neon-ring relative overflow-hidden rounded-2xl p-5">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-cyan-300/0 via-cyan-300/80 to-cyan-300/0" />
-          <div className="inline-flex items-center rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-200">
-            <Sparkles className="mr-2 h-3.5 w-3.5" />
-            JSON to Architecture Graph
-          </div>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-100 md:text-4xl text-balance">
-            Build a scalable architecture map from your thoughts
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300 md:text-base">
-            Submit your architecture definition and get an animated graph. Nodes are interactive, draggable, zoomable, and exportable as PNG or SVG.
+        {/* Hover actions */}
+        <div
+          className={`absolute inset-0 flex items-center justify-center gap-3 bg-slate-900/80 backdrop-blur-sm transition-opacity duration-200 ${
+            hovered ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <button
+            onClick={() => router.push(`/dashboard`)}
+            className="flex items-center gap-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400/30 px-3 py-1.5 text-xs font-medium text-cyan-300 hover:bg-cyan-500/30 transition-colors"
+          >
+            <GitBranch className="h-3.5 w-3.5" />
+            Graph öffnen
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="flex items-center gap-1.5 rounded-lg bg-red-500/20 border border-red-400/30 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+          >
+            {deleting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="h-3.5 w-3.5" />
+            )}
+            Löschen
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div>
+          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-100">
+            {project.title}
+          </h3>
+          <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+            {project.prompt}
           </p>
+        </div>
+
+        {/* Tech stack */}
+        {project.techStackArray.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {project.techStackArray.slice(0, 4).map((tech) => (
+              <TechBadge key={tech} tech={tech} />
+            ))}
+            {project.techStackArray.length > 4 && (
+              <span className="inline-flex h-6 items-center rounded-full bg-slate-700/60 px-2.5 text-[10px] text-slate-400">
+                +{project.techStackArray.length - 4}
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="mt-auto flex items-center justify-between pt-1">
+          <span className="text-[11px] text-slate-600">
+            {project.componentCount > 0 ? `${project.componentCount} Komponenten` : "Neu"}
+          </span>
+          <span className="text-[11px] text-slate-600">
+            {project.createdAt.toLocaleDateString("de-AT", {
+              day: "2-digit",
+              month: "short",
+            })}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+function Sidebar({
+  projects,
+  open,
+  onClose,
+  searchQuery,
+  onSearchChange,
+}: {
+  projects: Project[];
+  open: boolean;
+  onClose: () => void;
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+}) {
+  const filtered = projects.filter(
+    (p) =>
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.techStackArray.some((t) =>
+        t.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+  );
+
+  const grouped = groupProjectsByTime(filtered);
+
+  function SidebarGroup({
+    label,
+    items,
+  }: {
+    label: string;
+    items: Project[];
+  }) {
+    if (items.length === 0) return null;
+    return (
+      <div className="mb-4">
+        <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+          {label}
+        </p>
+        {items.map((p) => (
+          <button
+            key={p.id}
+            className="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200"
+          >
+            <LayoutDashboard className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
+            <span className="line-clamp-2 leading-snug">{p.title}</span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Mobile overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/60 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      <aside
+        className={`
+          fixed left-0 top-0 z-40 flex h-full w-64 flex-col border-r border-white/6 bg-slate-950/90 backdrop-blur-xl transition-transform duration-300
+          lg:static lg:z-auto lg:translate-x-0 lg:bg-transparent
+          ${open ? "translate-x-0" : "-translate-x-full"}
+        `}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-5">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-bold">
+              VN
+            </div>
+            <span className="text-sm font-semibold text-slate-200">Venator</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-md p-1 text-slate-500 hover:text-slate-300 lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="px-3 pb-3">
+          <div className="flex items-center gap-2 rounded-xl border border-white/8 bg-white/4 px-3 py-2">
+            <Search className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Projekte suchen…"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full bg-transparent text-xs text-slate-300 placeholder-slate-600 outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Project list */}
+        <div className="flex-1 overflow-y-auto px-1 py-2">
+          {projects.length === 0 ? (
+            <p className="px-4 py-6 text-center text-xs text-slate-600">
+              Noch keine Projekte
+            </p>
+          ) : (
+            <>
+              <SidebarGroup label="Heute" items={grouped.today} />
+              <SidebarGroup label="Letzte 7 Tage" items={grouped.last7} />
+              <SidebarGroup label="Letzter Monat" items={grouped.lastMonth} />
+              <SidebarGroup label="Älter" items={grouped.older} />
+            </>
+          )}
+        </div>
+      </aside>
+    </>
+  );
+}
+
+// ─── Starter templates ────────────────────────────────────────────────────────
+
+const STARTERS = [
+  {
+    icon: ShoppingCart,
+    label: "E-Commerce Plattform",
+    prompt:
+      "Ich möchte eine E-Commerce-Plattform für handgemachte Produkte bauen, mit Produktkatalog, Warenkorb und Stripe-Bezahlung.",
+    stack: ["Next.js", "Supabase", "Stripe", "Tailwind"],
+  },
+  {
+    icon: SmartphoneNfc,
+    label: "Social Media App MVP",
+    prompt:
+      "Eine Social-Media-App, auf der Nutzer kurze Beiträge posten, anderen folgen und Feed-Beiträge liken können.",
+    stack: ["React", "Node.js", "MongoDB", "Firebase"],
+  },
+  {
+    icon: Sparkles,
+    label: "KI-SaaS Wrapper",
+    prompt:
+      "Ein KI-SaaS-Produkt, das GPT-4 nutzt, um automatisch Marketing-Texte und Social-Media-Posts zu generieren.",
+    stack: ["Next.js", "Python", "FastAPI", "Supabase"],
+  },
+  {
+    icon: Users,
+    label: "Internal Admin Dashboard",
+    prompt:
+      "Ein internes Admin-Dashboard für ein kleines Team mit Datentabellen, Rollenverwaltung und Analytics-Charts.",
+    stack: ["React", "Node.js", "PostgreSQL", "TypeScript"],
+  },
+];
+
+// ─── Dashboard Page ───────────────────────────────────────────────────────────
+
+export default function DashboardPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
+
+  // Subscribe to Firestore projects
+  useEffect(() => {
+    if (!user) return;
+    const unsub = subscribeToProjects(user.uid, setProjects);
+    return unsub;
+  }, [user]);
+
+  const handleStarterClick = useCallback((starterPrompt: string) => {
+    setPrompt(starterPrompt);
+    textareaRef.current?.focus();
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (e?: React.FormEvent) => {
+      e?.preventDefault();
+      if (!prompt.trim() || !user || submitting) return;
+
+      setSubmitting(true);
+      try {
+        await createProject({
+          userId: user.uid,
+          title: generateTitle(prompt),
+          prompt: prompt.trim(),
+          status: "draft",
+          techStackArray: [],
+          componentCount: 0,
+        });
+        setPrompt("");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [prompt, user, submitting],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        void handleSubmit();
+      }
+    },
+    [handleSubmit],
+  );
+
+  const handleDelete = useCallback(async (id: string) => {
+    await deleteProject(id);
+  }, []);
+
+  const displayName = user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "there";
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-100">
+      {/* Ambient background */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute -left-40 top-0 h-[500px] w-[500px] rounded-full bg-cyan-500/8 blur-[120px]" />
+        <div className="absolute -right-40 bottom-0 h-[500px] w-[500px] rounded-full bg-fuchsia-500/8 blur-[120px]" />
+      </div>
+
+      {/* Sidebar */}
+      <div className="hidden lg:flex lg:shrink-0">
+        <Sidebar
+          projects={projects}
+          open={true}
+          onClose={() => {}}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+      </div>
+      <Sidebar
+        projects={projects}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+
+      {/* Main content */}
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        {/* Top bar */}
+        <header className="flex shrink-0 items-center justify-between border-b border-white/6 px-4 py-3 lg:px-6">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="rounded-lg p-2 text-slate-400 hover:bg-white/5 hover:text-slate-200 lg:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="hidden items-center gap-2 lg:flex">
+            <Wrench className="h-4 w-4 text-slate-500" />
+            <span className="text-sm text-slate-500">Dashboard</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-bold">
+              {displayName[0]?.toUpperCase()}
+            </div>
+          </div>
         </header>
 
-        <section className="grid gap-6 lg:grid-cols-[minmax(360px,520px)_1fr]">
-          <JsonEditor
-            value={jsonInput}
-            onChange={setJsonInput}
-            onGenerate={handleGenerateGraph}
-            examples={JSON_EXAMPLES.map((item) => ({
-              id: item.id,
-              name: item.name,
-              description: item.description,
-            }))}
-            activeExampleId={activeExampleId}
-            onLoadExample={handleLoadExample}
-            isLoading={isLoading}
-            error={error}
-          />
+        {/* Hero — Start-First */}
+        <section className="mx-auto w-full max-w-3xl px-4 py-12 lg:py-16">
+          <h1 className="mb-8 text-center text-3xl font-bold tracking-tight text-slate-50 md:text-4xl text-balance">
+            Was möchtest du heute bauen,{" "}
+            <span className="bg-gradient-to-r from-cyan-400 to-fuchsia-400 bg-clip-text text-transparent">
+              {displayName}?
+            </span>
+          </h1>
 
-          <GraphCanvas
-            nodes={nodes}
-            edges={edges}
-            isLoading={isLoading}
-            onNodeSelect={handleSelectNode}
-            onGenerate={handleGenerateGraph}
-          />
+          {/* Prompt form */}
+          <form onSubmit={handleSubmit} className="relative">
+            <div
+              className={`relative rounded-2xl border transition-all duration-300 ${
+                prompt.length > 0
+                  ? "border-cyan-400/50 shadow-[0_0_0_4px_rgba(34,211,238,0.08),0_0_32px_rgba(34,211,238,0.12)]"
+                  : "border-white/10 shadow-none"
+              } bg-slate-900/80 backdrop-blur-sm`}
+            >
+              <textarea
+                ref={textareaRef}
+                rows={3}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Beschreibe deine App-Idee (z.B. Ein Marktplatz für gebrauchte Fahrräder)…"
+                className="w-full resize-none bg-transparent px-5 py-4 pr-14 text-sm text-slate-200 placeholder-slate-600 outline-none"
+              />
+              <button
+                type="submit"
+                disabled={!prompt.trim() || submitting}
+                className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500 text-slate-950 transition-all hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Starter badges */}
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {STARTERS.map((s) => (
+              <button
+                key={s.label}
+                onClick={() => handleStarterClick(s.prompt)}
+                className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/8 hover:text-cyan-300"
+              >
+                <s.icon className="h-3.5 w-3.5" />
+                {s.label}
+              </button>
+            ))}
+          </div>
         </section>
-      </main>
 
-      <ComponentDetailsSheet
-        component={selectedComponent}
-        open={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
-      />
+        {/* Project grid */}
+        {projects.length > 0 && (
+          <section className="mx-auto w-full max-w-6xl px-4 pb-12 lg:px-6">
+            <div className="mb-5 flex items-center gap-3">
+              <h2 className="text-sm font-semibold text-slate-400">
+                Deine Projekte
+              </h2>
+              <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-500">
+                {projects.length}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project, i) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  index={i}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empty state */}
+        {projects.length === 0 && !authLoading && (
+          <div className="mx-auto flex max-w-sm flex-col items-center gap-3 px-4 py-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-slate-800/60">
+              <Plus className="h-6 w-6 text-slate-500" />
+            </div>
+            <p className="text-sm text-slate-600">
+              Noch keine Projekte. Beschreibe deine Idee oben!
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
