@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Database, Server, Cloud, Code, Globe, Cpu, Shield, Layers } from 'lucide-react';
 import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Ripple,
   TechOrbitDisplay,
@@ -88,10 +89,22 @@ const orbitIcons: IconConfig[] = [
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   async function handleSubmit(_event: FormEvent<HTMLFormElement>) {
     setError('');

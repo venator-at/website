@@ -41,21 +41,37 @@ export async function POST(request: Request) {
     const body = (await request.json()) as GenerateJsonRequest;
     const idea = body.idea?.trim();
 
+    console.log("[AI ROUTE] Request received", {
+      hasIdea: Boolean(idea),
+      ideaLength: idea?.length ?? 0,
+    });
+
     if (!idea) {
       return NextResponse.json({ error: "Please provide an idea." }, { status: 400 });
     }
 
-    const apiKey = process.env.GOOGLE_AI_STUDIO_API_KEY;
-    const model = process.env.GOOGLE_AI_MODEL || "gemini-3.0-flash-preview";
+    // Support both key names:
+    // - GOOGLE_AI_STUDIO_API_KEY (project convention)
+    // - GOOGLE_API_KEY (official @google/genai docs)
+    const apiKey = (
+      process.env.GOOGLE_AI_STUDIO_API_KEY ?? process.env.GOOGLE_API_KEY
+    )?.trim();
+    const model = process.env.GOOGLE_AI_MODEL || "gemini-3-flash-preview";
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing GOOGLE_AI_STUDIO_API_KEY in environment." },
+        {
+          error:
+            "Missing Google AI key. Set GOOGLE_AI_STUDIO_API_KEY or GOOGLE_API_KEY in .env.local and restart dev server.",
+        },
         { status: 500 },
       );
     }
 
     const prompt = buildArchitectureGeneratorPrompt(idea);
+    console.log("[AI PROMPT START]");
+    console.log(prompt);
+    console.log("[AI PROMPT END]");
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
@@ -81,6 +97,10 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("[AI ROUTE] Gemini request failed", {
+        status: response.status,
+        body: errorText,
+      });
       return NextResponse.json(
         { error: `Gemini request failed: ${response.status} ${errorText}` },
         { status: 502 },
@@ -138,6 +158,7 @@ export async function POST(request: Request) {
       jsonText: JSON.stringify(parsed, null, 2),
     });
   } catch (error) {
+    console.error("[AI ROUTE] Unexpected server error", error);
     const message = error instanceof Error ? error.message : "Unknown server error.";
     return NextResponse.json({ error: message }, { status: 500 });
   }

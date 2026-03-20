@@ -4,8 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
-  Check,
-  Copy,
   GitBranch,
   LayoutDashboard,
   Loader2,
@@ -20,7 +18,17 @@ import {
   deleteProject,
   subscribeToProjects,
 } from "@/lib/firebase/projects";
+import { GraphCanvas } from "@/components/graph/graph-canvas";
+import { ComponentDetailsSheet } from "@/components/panels/component-details-sheet";
+import { parseArchitectureJson, transformArchitectureToGraph } from "@/lib/graph/transform";
+import { layoutGraph } from "@/lib/graph/layout";
 import type { Project } from "@/types/project";
+import type {
+  ArchitectureComponentInput,
+  ArchitectureEdge,
+  ArchitectureInput,
+  ArchitectureNode,
+} from "@/types/architecture";
 import { VercelV0Chat } from "@/components/ui/v0-ai-chat";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 
@@ -30,6 +38,49 @@ function generateTitle(prompt: string): string {
   const trimmed = prompt.trim();
   if (trimmed.length <= 40) return trimmed;
   return trimmed.slice(0, 37) + "…";
+}
+
+function buildLocalFallbackArchitecture(idea: string): ArchitectureInput {
+  const title = idea.split(/[.!?\n]/)[0]?.trim() || "User platform";
+
+  return {
+    components: [
+      {
+        name: "Frontend",
+        tech: "Next.js",
+        reason: `User interface for: ${title}`.slice(0, 220),
+        alternatives: ["Nuxt", "SvelteKit"],
+        risks: ["Complex UI state can grow quickly"],
+      },
+      {
+        name: "API",
+        tech: "Node.js + Fastify",
+        reason: "Central business logic and secure access to backend services.",
+        alternatives: ["NestJS", "FastAPI"],
+        risks: ["Insufficient validation can break data contracts"],
+      },
+      {
+        name: "Database",
+        tech: "PostgreSQL",
+        reason: "Reliable relational storage for users, projects, and domain entities.",
+        alternatives: ["MySQL", "MongoDB"],
+        risks: ["Schema migrations need discipline"],
+      },
+      {
+        name: "Auth",
+        tech: "Supabase Auth",
+        reason: "Managed authentication with quick setup for sign-in and session handling.",
+        alternatives: ["Firebase Auth", "Auth.js"],
+        risks: ["Provider lock-in if abstraction is missing"],
+      },
+    ],
+    connections: [
+      { from: "Frontend", to: "API", type: "HTTPS requests" },
+      { from: "API", to: "Database", type: "CRUD queries" },
+      { from: "Frontend", to: "Auth", type: "login/signup" },
+      { from: "API", to: "Auth", type: "token validation" },
+    ],
+  };
 }
 
 function groupProjectsByTime(projects: Project[]) {
@@ -380,9 +431,12 @@ export default function DashboardPage() {
   const [prompt, setPrompt] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [generatingJson, setGeneratingJson] = useState(false);
-  const [generatedJson, setGeneratedJson] = useState("");
   const [generateError, setGenerateError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [graphNodes, setGraphNodes] = useState<ArchitectureNode[]>([]);
+  const [graphEdges, setGraphEdges] = useState<ArchitectureEdge[]>([]);
+  const [selectedComponent, setSelectedComponent] = useState<ArchitectureComponentInput | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [renderVersion, setRenderVersion] = useState(0);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -398,79 +452,225 @@ export default function DashboardPage() {
     return unsub;
   }, [user]);
 
+  const normalizeAiArchitecture = useCallback((jsonText: string): ArchitectureInput | null => {
+    try {
+      const parsed = JSON.parse(jsonText) as Record<string, unknown>;
+      const rawComponents = Array.isArray(parsed.components) ? parsed.components : [];
+      const rawConnections = Array.isArray(parsed.connections) ? parsed.connections : [];
+
+      if (rawComponents.length === 0) {
+        return null;
+      }
+
+      const components = rawComponents.map((component, index) => {
+        const obj = typeof component === "object" && component !== null
+          ? (component as Record<string, unknown>)
+          : {};
+
+        const nameRaw = typeof obj.name === "string" ? obj.name.trim() : "";
+        const techRaw = typeof obj.tech === "string" ? obj.tech.trim() : "";
+        const reasonRaw = typeof obj.reason === "string" ? obj.reason.trim() : "";
+
+        const alternatives = Array.isArray(obj.alternatives)
+          ? obj.alternatives.filter((v): v is string => typeof v === "string").map((v) => v.trim()).filter(Boolean)
+          : [];
+
+        const risks = Array.isArray(obj.risks)
+          ? obj.risks.filter((v): v is string => typeof v === "string").map((v) => v.trim()).filter(Boolean)
+          : [];
+
+        return {
+          name: nameRaw || `Component ${index + 1}`,
+          tech: techRaw || "Unknown Tech",
+          reason: reasonRaw.length >= 8 ? reasonRaw : "AI recommendation for this component.",
+          alternatives,
+          risks,
+        };
+      });
+
+      const componentNames = new Set(components.map((c) => c.name));
+
+      let connections = rawConnections
+        .map((connection) => {
+          const obj = typeof connection === "object" && connection !== null
+            ? (connection as Record<string, unknown>)
+            : {};
+
+          const from = typeof obj.from === "string" ? obj.from.trim() : "";
+          const to = typeof obj.to === "string" ? obj.to.trim() : "";
+          const type = typeof obj.type === "string" ? obj.type.trim() : "";
+
+          return {
+            from,
+            to,
+            type: type || "data flow",
+          };
+        })
+        .filter((c) => c.from && c.to && c.from !== c.to)
+        .filter((c) => componentNames.has(c.from) && componentNames.has(c.to));
+
+      if (components.length > 1 && connections.length === 0) {
+        connections = components.slice(0, -1).map((component, index) => ({
+          from: component.name,
+          to: components[index + 1].name,
+          type: "data flow",
+        }));
+      }
+
+      return {
+        components,
+        connections,
+      };
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const buildGraphFromJson = useCallback(
+    (jsonText: string) => {
+      const parsedResult = parseArchitectureJson(jsonText);
+      const architectureInput = parsedResult.ok
+        ? parsedResult.data
+        : normalizeAiArchitecture(jsonText);
+
+      if (!architectureInput) {
+        console.error("[GraphBuild] Failed to parse/normalize JSON for graph generation");
+        setGenerateError(parsedResult.ok ? "Graph konnte nicht erstellt werden." : parsedResult.error);
+        return false;
+      }
+
+      const nextRenderVersion = renderVersion + 1;
+      const transformed = transformArchitectureToGraph(architectureInput, nextRenderVersion);
+      const layouted = layoutGraph(transformed.nodes, transformed.edges, "LR");
+
+      setRenderVersion(nextRenderVersion);
+      setGraphNodes(layouted.nodes);
+      setGraphEdges(layouted.edges);
+      setGenerateError("");
+      console.log("[GraphBuild] Graph generated", {
+        nodes: layouted.nodes.length,
+        edges: layouted.edges.length,
+        renderVersion: nextRenderVersion,
+      });
+
+      return true;
+    },
+    [renderVersion, normalizeAiArchitecture],
+  );
+
+  const buildGraphFromArchitecture = useCallback(
+    (input: ArchitectureInput) => {
+      const nextRenderVersion = renderVersion + 1;
+      const transformed = transformArchitectureToGraph(input, nextRenderVersion);
+      const layouted = layoutGraph(transformed.nodes, transformed.edges, "LR");
+
+      setRenderVersion(nextRenderVersion);
+      setGraphNodes(layouted.nodes);
+      setGraphEdges(layouted.edges);
+      setGenerateError("");
+      console.log("[GraphBuild] Fallback graph generated", {
+        nodes: layouted.nodes.length,
+        edges: layouted.edges.length,
+        renderVersion: nextRenderVersion,
+      });
+    },
+    [renderVersion],
+  );
 
   const handleSubmit = useCallback(
     async (e?: React.FormEvent) => {
       e?.preventDefault();
-      if (!prompt.trim() || !user || submitting) return;
+      const idea = prompt.trim();
+
+      if (!idea || !user || submitting || generatingJson) return;
+
+      console.log("[DashboardSubmit] Submit started", {
+        ideaLength: idea.length,
+        userId: user.uid,
+      });
 
       setSubmitting(true);
+      setGeneratingJson(true);
+      setGenerateError("");
+      setSelectedComponent(null);
+      setDetailsOpen(false);
+
       try {
-        await createProject({
-          userId: user.uid,
-          title: generateTitle(prompt),
-          prompt: prompt.trim(),
-          status: "draft",
-          techStackArray: [],
-          componentCount: 0,
+        try {
+          await createProject({
+            userId: user.uid,
+            title: generateTitle(idea),
+            prompt: idea,
+            status: "draft",
+            techStackArray: [],
+            componentCount: 0,
+          });
+        } catch {
+          // Graph generation should still work even if project persistence fails.
+        }
+
+        const response = await fetch("/api/ai/generate-json", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ idea }),
         });
-        setPrompt("");
+
+        console.log("[DashboardSubmit] AI route response status", response.status);
+
+        const data = (await response.json()) as {
+          jsonText?: string;
+          error?: string;
+        };
+
+        if (!response.ok || !data.jsonText) {
+          console.error("[DashboardSubmit] AI route failed", data.error ?? "Unknown error");
+          buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
+          setGenerateError(
+            "KI-Antwort fehlgeschlagen. Fallback-Graph wurde lokal erstellt.",
+          );
+          return;
+        }
+
+        const graphBuilt = buildGraphFromJson(data.jsonText);
+
+        if (graphBuilt) {
+          setPrompt("");
+        } else {
+          buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
+          setGenerateError(
+            "KI-JSON war ungueltig. Fallback-Graph wurde lokal erstellt.",
+          );
+        }
+      } catch (error) {
+        console.error("[DashboardSubmit] Unexpected submit error", error);
+        buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
+        setGenerateError("Die Anfrage ist fehlgeschlagen. Fallback-Graph wurde lokal erstellt.");
       } finally {
+        setGeneratingJson(false);
         setSubmitting(false);
+        console.log("[DashboardSubmit] Submit finished");
       }
     },
-    [prompt, user, submitting],
+    [
+      prompt,
+      user,
+      submitting,
+      generatingJson,
+      buildGraphFromJson,
+      buildGraphFromArchitecture,
+    ],
   );
 
   const handleDelete = useCallback(async (id: string) => {
     await deleteProject(id);
   }, []);
 
-  const handleGenerateJson = useCallback(async () => {
-    const idea = prompt.trim();
-    if (!idea || generatingJson) return;
-
-    setGeneratingJson(true);
-    setGenerateError("");
-    setCopied(false);
-
-    try {
-      const response = await fetch("/api/ai/generate-json", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ idea }),
-      });
-
-      const data = (await response.json()) as {
-        jsonText?: string;
-        error?: string;
-      };
-
-      if (!response.ok || !data.jsonText) {
-        setGenerateError(data.error ?? "Die KI-Antwort konnte nicht verarbeitet werden.");
-        return;
-      }
-
-      setGeneratedJson(data.jsonText);
-    } catch {
-      setGenerateError("Die Anfrage ist fehlgeschlagen. Bitte versuche es erneut.");
-    } finally {
-      setGeneratingJson(false);
-    }
-  }, [prompt, generatingJson]);
-
-  const handleCopyJson = useCallback(async () => {
-    if (!generatedJson) return;
-    try {
-      await navigator.clipboard.writeText(generatedJson);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1200);
-    } catch {
-      setCopied(false);
-    }
-  }, [generatedJson]);
+  const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
+    setSelectedComponent(component);
+    setDetailsOpen(true);
+  }, []);
 
   const displayName = user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "there";
 
@@ -505,59 +705,46 @@ export default function DashboardPage() {
         <DashboardHeader />
 
         {/* Hero — Start-First */}
-        <section className="mx-auto w-full max-w-3xl px-4 py-12 lg:py-16">
-          <VercelV0Chat
-            value={prompt}
-            onChange={setPrompt}
-            onSubmit={() => void handleSubmit()}
-            submitting={submitting}
-            displayName={displayName}
-          />
+        <section className="mx-auto w-full max-w-6xl px-4 py-12 lg:py-16">
+          <div className="mx-auto w-full max-w-3xl">
+            <VercelV0Chat
+              value={prompt}
+              onChange={setPrompt}
+              onSubmit={() => void handleSubmit()}
+              submitting={submitting || generatingJson}
+              displayName={displayName}
+            />
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => void handleGenerateJson()}
-              disabled={!prompt.trim() || generatingJson}
-              className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/30 bg-cyan-500/20 px-4 py-2 text-sm font-medium text-cyan-200 transition-colors hover:bg-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {generatingJson ? (
+            {(submitting || generatingJson) && (
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
                 <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <GitBranch className="h-4 w-4" />
-              )}
-              JSON mit KI generieren
-            </button>
+                KI generiert Architektur-JSON und baut den Graph…
+              </div>
+            )}
 
-            {generatedJson && (
-              <button
-                type="button"
-                onClick={() => void handleCopyJson()}
-                className="inline-flex items-center gap-2 rounded-lg border border-white/12 bg-white/5 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10"
-              >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? "Kopiert" : "JSON kopieren"}
-              </button>
+            {generateError && (
+              <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                {generateError}
+              </div>
             )}
           </div>
 
-          {generateError && (
-            <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-              {generateError}
-            </div>
-          )}
-
-          {generatedJson && (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70">
-              <div className="border-b border-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-slate-400">
-                Generiertes Architektur-JSON
-              </div>
-              <pre className="max-h-[420px] overflow-auto p-4 text-xs leading-relaxed text-slate-200">
-                <code>{generatedJson}</code>
-              </pre>
-            </div>
-          )}
+          <div className="mt-8 h-[760px] w-full">
+            <GraphCanvas
+              nodes={graphNodes}
+              edges={graphEdges}
+              isLoading={submitting || generatingJson}
+              onNodeSelect={handleNodeSelect}
+              onGenerate={() => void handleSubmit()}
+            />
+          </div>
         </section>
+
+        <ComponentDetailsSheet
+          component={selectedComponent}
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+        />
 
         {/* Project grid */}
         {projects.length > 0 && (

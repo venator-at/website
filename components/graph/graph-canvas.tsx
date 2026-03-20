@@ -117,7 +117,7 @@ export function GraphCanvas({
   };
 
   return (
-    <section className="glass-panel neon-ring relative flex h-full min-h-[520px] flex-col overflow-hidden rounded-2xl">
+    <section className="glass-panel neon-ring relative flex h-[760px] w-full flex-col overflow-hidden rounded-2xl">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.12),transparent_34%),radial-gradient(circle_at_84%_78%,rgba(168,85,247,0.12),transparent_30%)]" />
       <div className="relative flex items-center justify-between gap-3 border-b border-slate-700/70 bg-slate-950/45 px-4 py-3 backdrop-blur">
         <div>
@@ -170,13 +170,23 @@ export function GraphCanvas({
           onNodeClick={handleNodeClick}
           onInit={setFlowInstance}
           fitView
+          nodesDraggable
+          nodesConnectable={false}
+          elementsSelectable
+          panOnDrag
+          panOnScroll={false}
+          zoomOnScroll
+          zoomOnPinch
+          zoomOnDoubleClick
+          preventScrolling
+          selectionOnDrag={false}
           minZoom={0.2}
           maxZoom={1.8}
           proOptions={{ hideAttribution: true }}
           defaultEdgeOptions={{
             style: { strokeWidth: 2, stroke: "#0f766e" },
           }}
-          className="!bg-transparent"
+          className="!h-full !w-full !bg-transparent [&_.react-flow__pane]:cursor-grab [&_.react-flow__pane:active]:cursor-grabbing"
         >
           <Background
             variant={BackgroundVariant.Dots}
