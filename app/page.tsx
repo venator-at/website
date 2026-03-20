@@ -8,7 +8,10 @@ import {
   Brain,
   CheckCircle2,
   GitBranch,
+  Lightbulb,
+  ListChecks,
   Shield,
+  Workflow,
   Zap,
 } from "lucide-react";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
@@ -50,32 +53,30 @@ export default function HomePage() {
         }}
         features={[
           {
-            title: "Next.js App Router",
+            title: "1. Idee beschreiben",
             description:
-              "Built with the latest React Server Components and Server Actions for optimal performance.",
-            tags: ["Next.js 15", "TypeScript"],
+              "Beschreibe dein Projekt in einfachen Worten, lege dein Skill-Level und Budget fest. Die KI analysiert deine Anforderungen in Sekunden.",
+            tags: ["Input", "KI-Analyse"],
             imageContent: (
-              <div className="text-4xl font-bold text-white/20 select-none">
-                ▲
-              </div>
+              <Lightbulb className="h-12 w-12 text-cyan-400/70" strokeWidth={1.5} />
             ),
           },
           {
-            title: "Supabase Integration",
+            title: "2. Geführte Auswahl",
             description:
-              "Seamless authentication and PostgreSQL database setup out of the box.",
-            tags: ["Auth", "PostgreSQL"],
+              "Keine Überforderung. Wähle Frontend, Datenbank & Hosting basierend auf objektiven KI-Analysen, verständlichen Vor-/Nachteilen und Anfängerfreundlichkeit.",
+            tags: ["Wizard", "Begründungen"],
             imageContent: (
-              <div className="text-4xl text-white/20 select-none">⚡</div>
+              <ListChecks className="h-12 w-12 text-cyan-400/70" strokeWidth={1.5} />
             ),
           },
           {
-            title: "Claude AI Powered",
+            title: "3. Architektur visualisieren",
             description:
-              "Leveraging Anthropic's Claude to provide expert architectural advice tailored to your project.",
-            tags: ["AI", "Anthropic API"],
+              "Dein fertiger Tech-Stack wird als interaktiver Graph dargestellt. Exportiere deinen Plan, erhalte Starter-Code und beginne direkt mit der Umsetzung.",
+            tags: ["React Flow", "Export"],
             imageContent: (
-              <div className="text-4xl text-white/50 select-none">✨</div>
+              <Workflow className="h-12 w-12 text-cyan-400/70" strokeWidth={1.5} />
             ),
           },
         ]}
