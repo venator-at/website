@@ -54,7 +54,9 @@ export async function POST(request: Request) {
     // - GOOGLE_AI_STUDIO_API_KEY (project convention)
     // - GOOGLE_API_KEY (official @google/genai docs)
     const apiKey = (
-      process.env.GOOGLE_AI_STUDIO_API_KEY ?? process.env.GOOGLE_API_KEY
+      process.env.GOOGLE_AI_STUDIO_API_KEY ??
+      process.env.GOOGLE_API_KEY ??
+      process.env.GEMINI_API_KEY
     )?.trim();
     const model = process.env.GOOGLE_AI_MODEL || "gemini-3-flash-preview";
 
@@ -62,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Missing Google AI key. Set GOOGLE_AI_STUDIO_API_KEY or GOOGLE_API_KEY in .env.local and restart dev server.",
+            "Missing Google AI key. On Vercel set GOOGLE_AI_STUDIO_API_KEY or GOOGLE_API_KEY (or GEMINI_API_KEY) in Environment Variables, then redeploy.",
         },
         { status: 500 },
       );
@@ -97,12 +99,21 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
+      const normalizedError = errorText.toUpperCase();
+      let hint = "";
+
+      if (normalizedError.includes("API_KEY_INVALID") || normalizedError.includes("API KEY NOT FOUND")) {
+        hint = " Hint: API key is invalid or not available in this Vercel environment. Re-check key value and set it for Production, then redeploy.";
+      } else if (normalizedError.includes("NOT_FOUND") || normalizedError.includes("MODEL")) {
+        hint = " Hint: Model name may be invalid for your account. Try GOOGLE_AI_MODEL=gemini-2.0-flash.";
+      }
+
       console.error("[AI ROUTE] Gemini request failed", {
         status: response.status,
         body: errorText,
       });
       return NextResponse.json(
-        { error: `Gemini request failed: ${response.status} ${errorText}` },
+        { error: `Gemini request failed (${model}): ${response.status} ${errorText}${hint}` },
         { status: 502 },
       );
     }
