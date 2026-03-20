@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   GitBranch,
   LayoutDashboard,
@@ -320,9 +321,7 @@ function Sidebar({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-5">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-bold">
-              VN
-            </div>
+            <Image src="/logo.png" alt="Venator" width={28} height={28} className="rounded-lg" />
             <span className="text-sm font-semibold text-slate-200">Venator</span>
           </div>
           <button
