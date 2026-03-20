@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, Zap } from "lucide-react";
 
@@ -23,9 +24,7 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
             href="/"
             className="flex items-center gap-2 font-bold text-lg tracking-tight text-slate-100 hover:text-cyan-300 transition-colors"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400/15 border border-cyan-400/30">
-              <Zap className="h-4 w-4 text-cyan-400" />
-            </div>
+            <Image src="/logo.png" alt="Venator" width={32} height={32} className="rounded-lg" />
             Venator
           </Link>
 

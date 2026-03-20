@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Zap } from "lucide-react";
 
 interface MenuItem {
@@ -69,7 +70,7 @@ const Footer2 = ({
           <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
             <div className="col-span-2 mb-8 lg:mb-0">
               <div className="flex items-center gap-2 lg:justify-start">
-                <Zap className="h-6 w-6 text-cyan-500" />
+                <Image src="/logo.png" alt="Venator" width={24} height={24} className="rounded-md" />
                 <p className="text-xl font-semibold text-white">Venator</p>
               </div>
               <p className="mt-4 font-bold text-slate-400">{tagline}</p>
