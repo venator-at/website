@@ -424,7 +424,14 @@ function Sidebar({
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const firebaseConfigured = Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+  const firebaseConfigured = [
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  ].every((value) => typeof value === "string" && value.trim().length > 0);
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);

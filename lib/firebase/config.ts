@@ -15,11 +15,20 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+const hasCompleteFirebaseConfig = [
+  firebaseConfig.apiKey,
+  firebaseConfig.authDomain,
+  firebaseConfig.projectId,
+  firebaseConfig.storageBucket,
+  firebaseConfig.messagingSenderId,
+  firebaseConfig.appId,
+].every((value) => typeof value === "string" && value.trim().length > 0);
+
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
 
-if (typeof window !== "undefined" && firebaseConfig.apiKey) {
+if (typeof window !== "undefined" && hasCompleteFirebaseConfig) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
   auth = getAuth(app);
 
@@ -28,7 +37,6 @@ if (typeof window !== "undefined" && firebaseConfig.apiKey) {
   try {
     db = initializeFirestore(app, {
       experimentalAutoDetectLongPolling: true,
-      useFetchStreams: false,
     });
   } catch {
     db = getFirestore(app);
