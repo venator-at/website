@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { LandingPage } from "@/components/ui/venator-landing";
-import { Pricing } from "@/components/ui/pricing";
 import { FeatureSteps } from "@/components/ui/feature-section";
 import {
   Brain,
+  Check,
   CheckCircle2,
   GitBranch,
   Lightbulb,
@@ -16,6 +17,8 @@ import {
 } from "lucide-react";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 import { Footer2 } from "@/components/ui/footer2";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 
 export default function HomePage() {
@@ -242,66 +245,112 @@ export default function HomePage() {
       </section>
 
       {/* ─── PRICING ──────────────────────────────────────────────── */}
-      <section id="pricing" className="relative mx-auto max-w-7xl px-4 lg:px-8">
-        <Pricing
-          title="Simple, Transparent Pricing"
-          description={`Choose the plan that fits your architecture needs.\nUnlock advanced AI capabilities and team collaboration as you grow.`}
-          plans={[
-            {
-              name: "STARTER",
-              price: "0",
-              yearlyPrice: "0",
-              period: "per month",
-              features: [
-                "Up to 3 architecture projects",
-                "Basic AI recommendations",
-                "PNG exports for graphs",
-                "Community support",
-                "Standard templates",
-              ],
-              description: "Perfect for students and beginners exploring software architecture",
-              buttonText: "Start Free",
-              href: "/signup",
-              isPopular: false,
-            },
-            {
-              name: "PRO",
-              price: "19",
-              yearlyPrice: "15",
-              period: "per month",
-              features: [
-                "Unlimited architecture projects",
-                "Advanced Claude AI",
-                "Interactive React Flow exports",
-                "Priority email support",
-                "Save custom templates",
-                "Downloadable markdown reports",
-              ],
-              description: "Ideal for professional developers and freelancers",
-              buttonText: "Upgrade to Pro",
-              href: "/signup",
-              isPopular: true,
-            },
-            {
-              name: "TEAM",
-              price: "49",
-              yearlyPrice: "39",
-              period: "per month",
-              features: [
-                "Everything in Pro",
-                "Team collaboration & sharing",
-                "Custom AI knowledge base",
-                "1-hour support response time",
-                "SSO Authentication",
-                "Advanced security",
-              ],
-              description: "For agencies and teams collaborating on complex systems",
-              buttonText: "Contact Sales",
-              href: "/contact",
-              isPopular: false,
-            },
-          ]}
-        />
+      <section id="pricing" className="relative mx-auto max-w-5xl px-4 py-28 lg:px-8">
+        {/* Section label */}
+        <div className="mb-10 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent to-cyan-400/30" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+            Pricing
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent to-cyan-400/30" />
+        </div>
+
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold tracking-tight text-slate-50 md:text-5xl">
+            Simple, transparent pricing
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-slate-400">
+            Bezahle nur für das, was du wirklich nutzt. Kein Abo, kein Risiko.
+          </p>
+        </div>
+
+        {/* No-subscription badge */}
+        <div className="flex justify-center mb-10">
+          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2 text-sm font-medium text-cyan-300">
+            ✨ Keine Abo-Falle! Tokens verfallen nie.
+          </span>
+        </div>
+
+        {/* 2-card grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+
+          {/* ── Left card: Free ─────────────────────────────────────── */}
+          <div className="rounded-2xl border border-slate-700 bg-slate-900/50 backdrop-blur-sm p-8 flex flex-col">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-4">
+              Der erste Entwurf geht auf uns
+            </p>
+            <div className="flex items-baseline gap-1 mb-2">
+              <span className="text-5xl font-bold text-slate-50">0€</span>
+            </div>
+            <p className="text-slate-400 text-sm mb-6">
+              Teste Venator völlig risikofrei.
+            </p>
+            <ul className="space-y-3 mb-8 flex-1">
+              {[
+                "1 Projekt-Architektur komplett gratis planen",
+                "Basis-Exportfunktionen",
+                "Interaktiver Architektur-Graph",
+              ].map((feature) => (
+                <li key={feature} className="flex items-start gap-2 text-sm text-slate-300">
+                  <Check className="h-4 w-4 text-cyan-400 mt-0.5 flex-shrink-0" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/signup"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "w-full font-semibold border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-slate-50"
+              )}
+            >
+              Gratis starten
+            </Link>
+          </div>
+
+          {/* ── Right card: Pay-As-You-Go (highlighted) ─────────────── */}
+          <div className="relative rounded-2xl border border-cyan-500/50 bg-slate-900/70 backdrop-blur-sm p-8 flex flex-col shadow-[0_0_50px_-12px_rgba(34,211,238,0.3)]">
+            {/* Subtle inner glow */}
+            <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400/5 via-transparent to-transparent" />
+
+            <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400 mb-4">
+              Pay-As-You-Go System
+            </p>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-5xl font-bold text-slate-50">Ab 5€</span>
+            </div>
+            <p className="text-slate-400 text-xs mb-2">Einmalzahlung · kein Abo</p>
+            <p className="text-slate-400 text-sm mb-6">
+              Keine versteckten Kosten. Zahle nur für die KI-Leistung, die du wirklich nutzt.
+            </p>
+            <ul className="space-y-3 mb-8 flex-1">
+              {[
+                "Tokens verfallen nie",
+                "1 Komplette Architektur = ca. 10 Tokens",
+                "Einzelne Refactorings = 2 Tokens",
+                "Unbegrenzt Projekte speichern & exportieren",
+                "Bezahlung sicher via Stripe",
+              ].map((feature) => (
+                <li key={feature} className="flex items-start gap-2 text-sm text-slate-300">
+                  <Check className="h-4 w-4 text-cyan-400 mt-0.5 flex-shrink-0" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/signup"
+              className={cn(
+                buttonVariants({ variant: "default" }),
+                "w-full font-semibold bg-cyan-500 hover:bg-cyan-400 text-slate-900",
+                "shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_35px_rgba(34,211,238,0.65)]",
+                "transition-all duration-300"
+              )}
+            >
+              Guthaben aufladen
+            </Link>
+          </div>
+
+        </div>
       </section>
 
 {/* ─── FOOTER ───────────────────────────────────────────────── */}
