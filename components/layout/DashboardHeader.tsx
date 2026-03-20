@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
@@ -12,7 +11,7 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from '@/components/ui/navigation-menu';
-import { LayoutDashboard, Plus, LogOut } from 'lucide-react';
+import { LayoutDashboard, Plus, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
@@ -123,41 +122,44 @@ export function DashboardHeader() {
       })}
     >
       <nav className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 lg:px-6">
-        {/* Logo */}
-        <div className="flex items-center gap-5">
-          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity rounded-md p-1">
-            <Image src="/logo.png" alt="Venator" width={26} height={26} className="rounded-lg" />
-            <span className="text-sm font-semibold text-slate-200">Venator</span>
-          </Link>
-
-          {/* Desktop nav */}
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
-                  >
-                    <LayoutDashboard className="h-3.5 w-3.5" />
-                    Dashboard
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link
-                    href="/new"
-                    className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Neues Projekt
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
+        {/* Desktop nav */}
+        <NavigationMenu className="hidden md:flex">
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5" />
+                  Dashboard
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link
+                  href="/new"
+                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Neues Projekt
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link
+                  href="/settings"
+                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                  Einstellungen
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
 
         {/* Desktop right side */}
         <div className="hidden items-center gap-2 md:flex">
@@ -213,6 +215,14 @@ export function DashboardHeader() {
           >
             <Plus className="h-4 w-4 text-slate-500" />
             Neues Projekt
+          </Link>
+          <Link
+            href="/settings"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
+          >
+            <Settings className="h-4 w-4 text-slate-500" />
+            Einstellungen
           </Link>
         </nav>
 
