@@ -424,6 +424,7 @@ function Sidebar({
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const firebaseConfigured = Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -440,17 +441,21 @@ export default function DashboardPage() {
 
   // Redirect if not logged in
   useEffect(() => {
+    if (!firebaseConfigured) {
+      return;
+    }
+
     if (!authLoading && !user) {
       router.push("/login");
     }
-  }, [authLoading, user, router]);
+  }, [authLoading, user, router, firebaseConfigured]);
 
   // Subscribe to Firestore projects
   useEffect(() => {
-    if (!user) return;
+    if (!firebaseConfigured || !user) return;
     const unsub = subscribeToProjects(user.uid, setProjects);
     return unsub;
-  }, [user]);
+  }, [user, firebaseConfigured]);
 
   const normalizeAiArchitecture = useCallback((jsonText: string): ArchitectureInput | null => {
     try {
@@ -582,11 +587,11 @@ export default function DashboardPage() {
       e?.preventDefault();
       const idea = prompt.trim();
 
-      if (!idea || !user || submitting || generatingJson) return;
+      if (!idea || submitting || generatingJson) return;
 
       console.log("[DashboardSubmit] Submit started", {
         ideaLength: idea.length,
-        userId: user.uid,
+        userId: user?.uid ?? "guest",
       });
 
       setSubmitting(true);
@@ -596,17 +601,19 @@ export default function DashboardPage() {
       setDetailsOpen(false);
 
       try {
-        try {
-          await createProject({
-            userId: user.uid,
-            title: generateTitle(idea),
-            prompt: idea,
-            status: "draft",
-            techStackArray: [],
-            componentCount: 0,
-          });
-        } catch {
-          // Graph generation should still work even if project persistence fails.
+        if (firebaseConfigured && user) {
+          try {
+            await createProject({
+              userId: user.uid,
+              title: generateTitle(idea),
+              prompt: idea,
+              status: "draft",
+              techStackArray: [],
+              componentCount: 0,
+            });
+          } catch {
+            // Graph generation should still work even if project persistence fails.
+          }
         }
 
         const response = await fetch("/api/ai/generate-json", {
@@ -658,6 +665,7 @@ export default function DashboardPage() {
       user,
       submitting,
       generatingJson,
+      firebaseConfigured,
       buildGraphFromJson,
       buildGraphFromArchitecture,
     ],

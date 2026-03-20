@@ -11,7 +11,7 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from '@/components/ui/navigation-menu';
-import { LayoutDashboard, Plus, LogOut, Settings } from 'lucide-react';
+import { LayoutDashboard, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
@@ -139,22 +139,10 @@ export function DashboardHeader() {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link
-                  href="/new"
+                  href="/dashboard"
                   className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  Neues Projekt
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink asChild>
-                <Link
-                  href="/settings"
-                  className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
-                >
-                  <Settings className="h-3.5 w-3.5" />
-                  Einstellungen
+                  Dashboard
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
@@ -209,20 +197,12 @@ export function DashboardHeader() {
             Dashboard
           </Link>
           <Link
-            href="/new"
+            href="/dashboard"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
           >
-            <Plus className="h-4 w-4 text-slate-500" />
-            Neues Projekt
-          </Link>
-          <Link
-            href="/settings"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
-          >
-            <Settings className="h-4 w-4 text-slate-500" />
-            Einstellungen
+            <LayoutDashboard className="h-4 w-4 text-slate-500" />
+            Dashboard
           </Link>
         </nav>
 
