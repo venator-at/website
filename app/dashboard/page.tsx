@@ -1,20 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowRight,
   GitBranch,
   LayoutDashboard,
   Loader2,
   Menu,
   Plus,
   Search,
-  ShoppingCart,
-  SmartphoneNfc,
-  Sparkles,
   Trash2,
-  Users,
   Wrench,
   X,
 } from "lucide-react";
@@ -25,6 +20,7 @@ import {
   subscribeToProjects,
 } from "@/lib/firebase/projects";
 import type { Project } from "@/types/project";
+import { VercelV0Chat } from "@/components/ui/v0-ai-chat";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -371,38 +367,6 @@ function Sidebar({
   );
 }
 
-// ─── Starter templates ────────────────────────────────────────────────────────
-
-const STARTERS = [
-  {
-    icon: ShoppingCart,
-    label: "E-Commerce Plattform",
-    prompt:
-      "Ich möchte eine E-Commerce-Plattform für handgemachte Produkte bauen, mit Produktkatalog, Warenkorb und Stripe-Bezahlung.",
-    stack: ["Next.js", "Supabase", "Stripe", "Tailwind"],
-  },
-  {
-    icon: SmartphoneNfc,
-    label: "Social Media App MVP",
-    prompt:
-      "Eine Social-Media-App, auf der Nutzer kurze Beiträge posten, anderen folgen und Feed-Beiträge liken können.",
-    stack: ["React", "Node.js", "MongoDB", "Firebase"],
-  },
-  {
-    icon: Sparkles,
-    label: "KI-SaaS Wrapper",
-    prompt:
-      "Ein KI-SaaS-Produkt, das GPT-4 nutzt, um automatisch Marketing-Texte und Social-Media-Posts zu generieren.",
-    stack: ["Next.js", "Python", "FastAPI", "Supabase"],
-  },
-  {
-    icon: Users,
-    label: "Internal Admin Dashboard",
-    prompt:
-      "Ein internes Admin-Dashboard für ein kleines Team mit Datentabellen, Rollenverwaltung und Analytics-Charts.",
-    stack: ["React", "Node.js", "PostgreSQL", "TypeScript"],
-  },
-];
 
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 
@@ -415,7 +379,6 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [prompt, setPrompt] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -431,10 +394,6 @@ export default function DashboardPage() {
     return unsub;
   }, [user]);
 
-  const handleStarterClick = useCallback((starterPrompt: string) => {
-    setPrompt(starterPrompt);
-    textareaRef.current?.focus();
-  }, []);
 
   const handleSubmit = useCallback(
     async (e?: React.FormEvent) => {
@@ -457,16 +416,6 @@ export default function DashboardPage() {
       }
     },
     [prompt, user, submitting],
-  );
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        void handleSubmit();
-      }
-    },
-    [handleSubmit],
   );
 
   const handleDelete = useCallback(async (id: string) => {
@@ -523,58 +472,13 @@ export default function DashboardPage() {
 
         {/* Hero — Start-First */}
         <section className="mx-auto w-full max-w-3xl px-4 py-12 lg:py-16">
-          <h1 className="mb-8 text-center text-3xl font-bold tracking-tight text-slate-50 md:text-4xl text-balance">
-            Was möchtest du heute bauen,{" "}
-            <span className="bg-gradient-to-r from-cyan-400 to-fuchsia-400 bg-clip-text text-transparent">
-              {displayName}?
-            </span>
-          </h1>
-
-          {/* Prompt form */}
-          <form onSubmit={handleSubmit} className="relative">
-            <div
-              className={`relative rounded-2xl border transition-all duration-300 ${
-                prompt.length > 0
-                  ? "border-cyan-400/50 shadow-[0_0_0_4px_rgba(34,211,238,0.08),0_0_32px_rgba(34,211,238,0.12)]"
-                  : "border-white/10 shadow-none"
-              } bg-slate-900/80 backdrop-blur-sm`}
-            >
-              <textarea
-                ref={textareaRef}
-                rows={3}
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Beschreibe deine App-Idee (z.B. Ein Marktplatz für gebrauchte Fahrräder)…"
-                className="w-full resize-none bg-transparent px-5 py-4 pr-14 text-sm text-slate-200 placeholder-slate-600 outline-none"
-              />
-              <button
-                type="submit"
-                disabled={!prompt.trim() || submitting}
-                className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-500 text-slate-950 transition-all hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                {submitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          </form>
-
-          {/* Starter badges */}
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {STARTERS.map((s) => (
-              <button
-                key={s.label}
-                onClick={() => handleStarterClick(s.prompt)}
-                className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/8 hover:text-cyan-300"
-              >
-                <s.icon className="h-3.5 w-3.5" />
-                {s.label}
-              </button>
-            ))}
-          </div>
+          <VercelV0Chat
+            value={prompt}
+            onChange={setPrompt}
+            onSubmit={() => void handleSubmit()}
+            submitting={submitting}
+            displayName={displayName}
+          />
         </section>
 
         {/* Project grid */}
