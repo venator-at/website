@@ -756,15 +756,15 @@ export default function DashboardPage() {
         <DashboardHeader />
 
         {/* Hero — Start-First */}
-        <section className="relative mx-auto w-full max-w-6xl overflow-hidden px-4 py-12 lg:py-16">
-          {/* Animated background shapes */}
+        <section className="relative w-full overflow-hidden py-12 lg:py-16">
+          {/* Animated background shapes — full width */}
           <ElegantShape
             delay={0.3}
             width={500}
             height={120}
             rotate={12}
             gradient="from-cyan-500/[0.12]"
-            className="left-[-8%] top-[10%] pointer-events-none"
+            className="left-[-4%] top-[10%] pointer-events-none"
           />
           <ElegantShape
             delay={0.5}
@@ -772,7 +772,7 @@ export default function DashboardPage() {
             height={100}
             rotate={-15}
             gradient="from-fuchsia-500/[0.12]"
-            className="right-[-5%] bottom-[15%] pointer-events-none"
+            className="right-[-2%] bottom-[15%] pointer-events-none"
           />
           <ElegantShape
             delay={0.4}
@@ -798,6 +798,7 @@ export default function DashboardPage() {
             gradient="from-sky-500/[0.12]"
             className="left-[22%] top-[2%] pointer-events-none"
           />
+          <div className="relative z-10 mx-auto w-full max-w-6xl px-4">
           <div className="relative z-10 mx-auto w-full max-w-3xl">
             <VercelV0Chat
               value={prompt}
@@ -843,6 +844,7 @@ export default function DashboardPage() {
               onNodeSelect={handleNodeSelect}
               onGenerate={() => void handleSubmit()}
             />
+          </div>
           </div>
         </section>
 
