@@ -3,6 +3,7 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  getDoc,
   query,
   where,
   onSnapshot,
@@ -22,6 +23,7 @@ function fromFirestore(id: string, data: Record<string, unknown>): Project {
     status: data.status as Project["status"],
     techStackArray: (data.techStackArray as string[]) ?? [],
     componentCount: (data.componentCount as number) ?? 0,
+    architectureJson: typeof data.architectureJson === "string" ? data.architectureJson : undefined,
     createdAt:
       data.createdAt instanceof Timestamp
         ? data.createdAt.toDate()
@@ -31,6 +33,13 @@ function fromFirestore(id: string, data: Record<string, unknown>): Project {
         ? data.updatedAt.toDate()
         : new Date(),
   };
+}
+
+export async function getProject(projectId: string): Promise<Project | null> {
+  if (!db) return null;
+  const snap = await getDoc(doc(db, "projects", projectId));
+  if (!snap.exists()) return null;
+  return fromFirestore(snap.id, snap.data() as Record<string, unknown>);
 }
 
 export async function createProject(input: ProjectCreateInput): Promise<string> {

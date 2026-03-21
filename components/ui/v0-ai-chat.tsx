@@ -13,7 +13,6 @@ import {
   Paperclip,
   X,
 } from "lucide-react";
-import { NewProjectModal } from "@/components/modals/new-project-modal";
 
 // ─── Auto-resize hook ──────────────────────────────────────────────────────────
 
@@ -115,13 +114,13 @@ export function VercelV0Chat({
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (value.trim() && !submitting) {
-        setModalOpen(true);
+        onSubmit();
+        adjustHeight(true);
       }
     }
   };
@@ -138,14 +137,9 @@ export function VercelV0Chat({
 
   const handleSubmitClick = () => {
     if (value.trim() && !submitting) {
-      setModalOpen(true);
+      onSubmit();
+      adjustHeight(true);
     }
-  };
-
-  const handleModalConfirm = () => {
-    setModalOpen(false);
-    onSubmit();
-    adjustHeight(true);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +148,6 @@ export function VercelV0Chat({
     const updated = [...attachedFiles, ...selected];
     setAttachedFiles(updated);
     onFilesChange?.(updated);
-    // Reset input so the same file can be re-selected
     e.target.value = "";
   };
 
@@ -167,13 +160,6 @@ export function VercelV0Chat({
   const hasContent = value.trim().length > 0 || attachedFiles.length > 0;
 
   return (
-    <>
-    <NewProjectModal
-      open={modalOpen}
-      onOpenChange={setModalOpen}
-      initialDescription={value}
-      onConfirm={handleModalConfirm}
-    />
     <div className="flex flex-col items-center w-full max-w-3xl mx-auto space-y-6">
       <h1 className="text-3xl font-bold tracking-tight text-center text-slate-50 md:text-4xl text-balance">
         Was möchtest du heute bauen
@@ -297,6 +283,5 @@ export function VercelV0Chat({
         </div>
       </div>
     </div>
-    </>
   );
 }

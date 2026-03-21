@@ -8,6 +8,7 @@ export interface Project {
   status: ProjectStatus;
   techStackArray: string[];
   componentCount: number;
+  architectureJson?: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -1,5 +1,10 @@
-import { redirect } from "next/navigation";
+import { NewProjectClient } from "./_client";
 
-export default function NewProjectRedirectPage() {
-  redirect("/dashboard");
+interface Props {
+  searchParams: Promise<{ q?: string }>;
+}
+
+export default async function NewProjectPage({ searchParams }: Props) {
+  const { q = "" } = await searchParams;
+  return <NewProjectClient initialPrompt={q} />;
 }
