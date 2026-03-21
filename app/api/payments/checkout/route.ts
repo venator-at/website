@@ -3,7 +3,10 @@ import Stripe from "stripe";
 import { getAdminAuth } from "@/lib/firebase/admin";
 import { CREDIT_PACKS, type CreditPackKey } from "@/lib/stripe/packs";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) throw new Error("STRIPE_SECRET_KEY is not set");
+  return new Stripe(process.env.STRIPE_SECRET_KEY);
+}
 
 export async function POST(request: Request) {
   try {
@@ -27,6 +30,7 @@ export async function POST(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [{ price: selected.priceId, quantity: 1 }],
