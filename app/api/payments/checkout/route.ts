@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getAdminAuth } from "@/lib/firebase/admin";
-import { CREDIT_PACKS, type CreditPackKey } from "@/lib/stripe/packs";
+import { CREDIT_PACKS, CREDITS_PER_EURO, type CreditPackKey } from "@/lib/stripe/packs";
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) throw new Error("STRIPE_SECRET_KEY is not set");
@@ -21,24 +21,53 @@ export async function POST(request: Request) {
     const decoded = await adminAuth.verifyIdToken(token);
     const userId = decoded.uid;
 
-    const { pack } = (await request.json()) as { pack: CreditPackKey };
-    const selected = CREDIT_PACKS[pack];
+    const { pack, customAmount } = (await request.json()) as {
+      pack: CreditPackKey;
+      customAmount?: number;
+    };
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    const stripe = getStripe();
+
+    if (pack === "custom") {
+      if (!customAmount || customAmount < 5 || !Number.isInteger(customAmount)) {
+        return NextResponse.json(
+          { error: "Mindestbetrag für Custom-Pakete ist 5€ (ganzzahlig)." },
+          { status: 400 },
+        );
+      }
+
+      const credits = customAmount * CREDITS_PER_EURO;
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: [
+          {
+            price_data: {
+              currency: "eur",
+              product_data: { name: "Venator Credits" },
+              unit_amount: customAmount * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: { userId, credits: String(credits), pack: "custom" },
+        success_url: `${appUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}/buy-credits`,
+      });
+
+      return NextResponse.json({ url: session.url });
+    }
+
+    const selected = CREDIT_PACKS[pack];
     if (!selected) {
       return NextResponse.json({ error: "Invalid pack" }, { status: 400 });
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
-    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [{ price: selected.priceId, quantity: 1 }],
-      metadata: {
-        userId,
-        credits: String(selected.credits),
-        pack,
-      },
+      metadata: { userId, credits: String(selected.credits), pack },
       success_url: `${appUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/buy-credits`,
     });

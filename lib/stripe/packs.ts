@@ -13,13 +13,10 @@ export const CREDIT_PACKS = {
     name: "Pro",
     description: "25 complete architectures",
   },
-  power: {
-    priceId: "price_1TDDTC5Dtk43yD4HiuIVKnvh",
-    credits: 600,
-    price: 20,
-    name: "Power",
-    description: "60 complete architectures",
-  },
 } as const;
 
-export type CreditPackKey = keyof typeof CREDIT_PACKS;
+export type FixedPackKey = keyof typeof CREDIT_PACKS;
+export type CreditPackKey = FixedPackKey | "custom";
+
+/** Credits granted per euro for custom purchases (starter rate). */
+export const CREDITS_PER_EURO = 20;
