@@ -480,7 +480,7 @@ export default function DashboardPage() {
         {/* Top bar */}
         <DashboardHeader />
 
-        <section className="relative mx-auto h-full w-full max-w-6xl overflow-hidden px-4 pb-10 pt-4 lg:pt-6">
+        <section className="relative mx-auto h-full w-full max-w-6xl overflow-visible px-4 pb-10 pt-4 lg:pt-6">
           <ElegantShape
             delay={0.3}
             width={500}
