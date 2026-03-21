@@ -382,6 +382,7 @@ export default function DashboardPage() {
         const requestId = data.requestId ?? responseRequestId;
 
         if (response.status === 402) {
+          setUiState("idle");
           setGenerateError(
             `Nicht genug Credits. Bitte lade dein Guthaben auf, um fortzufahren.`,
           );
@@ -575,7 +576,7 @@ export default function DashboardPage() {
 
           {showGraphContainer && (
             <div
-              className={`absolute inset-x-0 top-6 z-0 transition-all duration-700 ease-out ${
+              className={`absolute inset-0 z-0 flex items-center justify-center px-1 pb-28 pt-6 transition-all duration-700 ease-out ${
                 graphContainerOpen
                   ? "translate-y-0 scale-y-100 opacity-100"
                   : "translate-y-6 scale-y-[0.96] opacity-0"
