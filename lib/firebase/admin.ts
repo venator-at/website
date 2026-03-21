@@ -9,10 +9,14 @@ function getAdminApp() {
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error(
-      "Missing Firebase Admin credentials. Set FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY in .env.local",
-    );
+  const missing = [
+    !projectId && "FIREBASE_ADMIN_PROJECT_ID",
+    !clientEmail && "FIREBASE_ADMIN_CLIENT_EMAIL",
+    !privateKey && "FIREBASE_ADMIN_PRIVATE_KEY",
+  ].filter(Boolean);
+
+  if (missing.length > 0) {
+    throw new Error(`Missing Firebase Admin env vars: ${missing.join(", ")}`);
   }
 
   return initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
