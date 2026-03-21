@@ -173,18 +173,17 @@ export default function DashboardPage() {
       />
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col">
         <DashboardHeader />
 
-        <section className="relative mx-auto h-full w-full max-w-6xl overflow-visible px-4 pb-10 pt-4 lg:pt-6">
+        <section className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-10">
           <ElegantShape delay={0.3} width={500} height={120} rotate={12} gradient="from-cyan-500/[0.12]" className="left-[-4%] top-[10%] pointer-events-none" />
           <ElegantShape delay={0.5} width={400} height={100} rotate={-15} gradient="from-fuchsia-500/[0.12]" className="right-[-2%] bottom-[15%] pointer-events-none" />
           <ElegantShape delay={0.4} width={250} height={70} rotate={-8} gradient="from-indigo-500/[0.12]" className="left-[5%] bottom-[5%] pointer-events-none" />
           <ElegantShape delay={0.6} width={180} height={50} rotate={20} gradient="from-violet-500/[0.12]" className="right-[18%] top-[5%] pointer-events-none" />
           <ElegantShape delay={0.7} width={130} height={38} rotate={-25} gradient="from-sky-500/[0.12]" className="left-[22%] top-[2%] pointer-events-none" />
 
-          {/* Centered input */}
-          <div className="absolute left-0 right-0 top-1/2 z-20 mx-auto w-full max-w-3xl -translate-y-1/2 px-4 lg:px-0">
+          <div className="relative z-10 w-full max-w-3xl">
             <VercelV0Chat
               value={prompt}
               onChange={setPrompt}
