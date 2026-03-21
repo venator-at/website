@@ -429,7 +429,7 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
 
       {/* ── GRAPH PHASE ────────────────────────────────────────────────────────── */}
       {pageState === "graph-ready" && (
-        <main className="flex flex-1 flex-col overflow-hidden px-4 pb-6 pt-4">
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-6 pt-4">
           {/* Title row */}
           <div className="mb-4 flex items-center justify-between">
             <div>
@@ -447,7 +447,7 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
 
           {/* Graph */}
           <div className={cn(
-            "flex-1 overflow-hidden rounded-2xl transition-all duration-700 ease-out",
+            "min-h-0 flex-1 overflow-hidden rounded-2xl transition-all duration-700 ease-out",
             graphContainerOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             {graphContainerOpen && graphNodes.length > 0 ? (

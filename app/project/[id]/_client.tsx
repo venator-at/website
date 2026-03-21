@@ -227,7 +227,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
       <DashboardHeader />
 
-      <main className="flex flex-1 flex-col overflow-hidden px-4 pb-4 pt-3">
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 pt-3">
         {/* ── Top bar ──────────────────────────────────────────────────────── */}
         <div className="mb-3 flex items-start justify-between gap-4">
           {/* Left: back + title */}
@@ -347,7 +347,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
         ) : (
           <div
             className={cn(
-              "flex-1 overflow-hidden rounded-2xl transition-all duration-700 ease-out",
+              "min-h-0 flex-1 overflow-hidden rounded-2xl transition-all duration-700 ease-out",
               graphContainerOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3",
             )}
           >

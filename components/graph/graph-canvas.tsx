@@ -128,7 +128,7 @@ export function GraphCanvas({
         />
       </div>
 
-      <div ref={wrapperRef} className="relative flex-1">
+      <div ref={wrapperRef} className="relative min-h-0 flex-1">
         <ReactFlow<ArchitectureNode, ArchitectureEdge>
           nodes={canvasNodes}
           edges={canvasEdges}
