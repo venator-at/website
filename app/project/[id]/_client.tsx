@@ -347,7 +347,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
         ) : (
           <div
             className={cn(
-              "min-h-0 flex-1 overflow-hidden rounded-2xl transition-all duration-700 ease-out",
+              "min-h-0 flex-1 flex flex-col overflow-hidden rounded-2xl transition-all duration-700 ease-out",
               graphContainerOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3",
             )}
           >
