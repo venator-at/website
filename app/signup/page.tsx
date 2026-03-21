@@ -90,6 +90,7 @@ const orbitIcons: IconConfig[] = [
 export default function SignupPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -108,13 +109,17 @@ export default function SignupPage() {
 
   async function handleSubmit(_event: FormEvent<HTMLFormElement>) {
     setError('');
+    if (!firstName.trim()) {
+      setError('Bitte gib deinen Vornamen ein.');
+      return;
+    }
     if (password.length < 6) {
       setError('Passwort muss mindestens 6 Zeichen lang sein.');
       return;
     }
     setLoading(true);
     try {
-      await signUpWithEmail(email, password);
+      await signUpWithEmail(email, password, firstName);
       router.push('/dashboard');
     } catch (err: unknown) {
       console.error('Signup failed:', err);
@@ -147,6 +152,14 @@ export default function SignupPage() {
     header: 'Konto erstellen',
     subHeader: 'Starten Sie kostenlos mit der Architekturplanung',
     fields: [
+      {
+        label: 'Vorname',
+        required: true,
+        type: 'text' as const,
+        placeholder: 'Dein Vorname',
+        onChange: (event: ChangeEvent<HTMLInputElement>) =>
+          setFirstName(event.target.value),
+      },
       {
         label: 'E-Mail',
         required: true,

@@ -11,7 +11,7 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from '@/components/ui/navigation-menu';
-import { LayoutDashboard, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, LogOut, Settings, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
@@ -159,10 +159,11 @@ export function DashboardHeader() {
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
                 <Link
-                  href="/dashboard"
+                  href="/settings"
                   className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors"
                 >
-                  Dashboard
+                  <Settings className="h-3.5 w-3.5" />
+                  Einstellungen
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
@@ -217,12 +218,12 @@ export function DashboardHeader() {
             Dashboard
           </Link>
           <Link
-            href="/dashboard"
+            href="/settings"
             onClick={() => setOpen(false)}
             className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
           >
-            <LayoutDashboard className="h-4 w-4 text-slate-500" />
-            Dashboard
+            <Settings className="h-4 w-4 text-slate-500" />
+            Einstellungen
           </Link>
         </nav>
 

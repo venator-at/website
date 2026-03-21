@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
+  updateProfile,
   type User,
 } from "firebase/auth";
 import { auth } from "./config";
@@ -19,9 +20,13 @@ function ensureAuthInitialized() {
   throw error;
 }
 
-export async function signUpWithEmail(email: string, password: string) {
+export async function signUpWithEmail(email: string, password: string, firstName: string) {
   const firebaseAuth = ensureAuthInitialized();
-  return createUserWithEmailAndPassword(firebaseAuth, email, password);
+  const credential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+  if (firstName.trim()) {
+    await updateProfile(credential.user, { displayName: firstName.trim() });
+  }
+  return credential;
 }
 
 export async function signInWithEmail(email: string, password: string) {
