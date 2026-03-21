@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
+import { FieldValue } from "firebase-admin/firestore";
 import { buildArchitectureGeneratorPrompt } from "@/lib/ai/prompt";
+import { getAdminAuth, getAdminDb } from "@/lib/firebase/admin";
+import { FREE_CREDITS, CREDITS_PER_GENERATION } from "@/lib/firebase/credits";
 
 interface GenerateJsonRequest {
   idea?: string;
@@ -36,6 +39,68 @@ function basicArchitectureShapeValidation(value: unknown): { ok: true } | { ok: 
   return { ok: true };
 }
 
+async function resolveUserId(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
+
+  try {
+    const token = authHeader.slice(7);
+    const decoded = await getAdminAuth().verifyIdToken(token);
+    return decoded.uid;
+  } catch {
+    return null;
+  }
+}
+
+async function ensureCredits(userId: string): Promise<{ ok: true; credits: number } | { ok: false; credits: number }> {
+  const db = getAdminDb();
+  const userRef = db.collection("users").doc(userId);
+  const snap = await userRef.get();
+
+  if (!snap.exists) {
+    // Initialize user with free credits
+    await userRef.set({
+      credits: FREE_CREDITS,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return { ok: true, credits: FREE_CREDITS };
+  }
+
+  const currentCredits = (snap.data()?.credits as number) ?? 0;
+  return currentCredits >= CREDITS_PER_GENERATION
+    ? { ok: true, credits: currentCredits }
+    : { ok: false, credits: currentCredits };
+}
+
+async function deductCredits(userId: string): Promise<void> {
+  const db = getAdminDb();
+  const userRef = db.collection("users").doc(userId);
+
+  await db.runTransaction(async (t) => {
+    const snap = await t.get(userRef);
+    const current = (snap.data()?.credits as number) ?? 0;
+
+    if (current < CREDITS_PER_GENERATION) {
+      throw new Error("Insufficient credits");
+    }
+
+    t.update(userRef, {
+      credits: FieldValue.increment(-CREDITS_PER_GENERATION),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
+
+  // Record usage
+  const db2 = getAdminDb();
+  await db2.collection("credit_transactions").add({
+    userId,
+    amount: -CREDITS_PER_GENERATION,
+    reason: "usage",
+    createdAt: FieldValue.serverTimestamp(),
+  });
+}
+
 export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   const respond = (body: Record<string, unknown>, status: number) => {
@@ -56,6 +121,23 @@ export async function POST(request: Request) {
 
     if (!idea) {
       return respond({ error: "Please provide an idea." }, 400);
+    }
+
+    // Verify auth and check credits
+    const userId = await resolveUserId(request);
+
+    if (userId) {
+      const creditCheck = await ensureCredits(userId);
+      if (!creditCheck.ok) {
+        return respond(
+          {
+            error: "Nicht genug Credits. Bitte lade dein Guthaben auf.",
+            credits: creditCheck.credits,
+            required: CREDITS_PER_GENERATION,
+          },
+          402,
+        );
+      }
     }
 
     // Support both key names:
@@ -172,6 +254,13 @@ export async function POST(request: Request) {
         },
         502,
       );
+    }
+
+    // Deduct credits after successful generation
+    if (userId) {
+      await deductCredits(userId).catch((err) => {
+        console.error("[AI ROUTE] Credit deduction failed", err);
+      });
     }
 
     return respond(

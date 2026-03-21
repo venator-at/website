@@ -319,7 +319,7 @@ export default function HomePage() {
             <ul className="space-y-3 mb-8 flex-1">
               {[
                 "Tokens verfallen nie",
-                "1 Komplette Architektur = ca. 10 Tokens",
+                "100 Tokens ab 5€ – verfallen nie",
                 "Einzelne Refactorings = 2 Tokens",
                 "Unbegrenzt Projekte speichern & exportieren",
                 "Bezahlung sicher via Stripe",
@@ -331,7 +331,7 @@ export default function HomePage() {
               ))}
             </ul>
             <Link
-              href="/signup"
+              href="/buy-credits"
               className={cn(
                 buttonVariants({ variant: "default" }),
                 "w-full font-semibold bg-cyan-500 hover:bg-cyan-400 text-slate-900",

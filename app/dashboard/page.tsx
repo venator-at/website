@@ -13,6 +13,8 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/lib/firebase/config";
+import { getIdToken } from "firebase/auth";
 import {
   createProject,
   deleteProject,
@@ -619,10 +621,17 @@ export default function DashboardPage() {
       setDetailsOpen(false);
 
       try {
+        // Get Firebase ID token for auth + credit check
+        let idToken: string | undefined;
+        if (user && auth?.currentUser) {
+          idToken = await getIdToken(auth.currentUser, /* forceRefresh */ false).catch(() => undefined);
+        }
+
         const response = await fetch("/api/ai/generate-json", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
           },
           body: JSON.stringify({ idea }),
         });
@@ -641,6 +650,14 @@ export default function DashboardPage() {
         };
 
         const requestId = data.requestId ?? responseRequestId;
+
+        if (response.status === 402) {
+          setGenerateError(
+            `Nicht genug Credits. Bitte lade dein Guthaben auf, um fortzufahren.`,
+          );
+          setRequestTrace("Aufladen unter /buy-credits");
+          return;
+        }
 
         if (!response.ok || !data.jsonText) {
           console.error("[DashboardSubmit] AI route failed", data.error ?? "Unknown error");
@@ -756,8 +773,16 @@ export default function DashboardPage() {
             )}
 
             {generateError && (
-              <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-                {generateError}
+              <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200 flex items-center justify-between gap-3">
+                <span>{generateError}</span>
+                {generateError.includes("Credits") && (
+                  <a
+                    href="/buy-credits"
+                    className="shrink-0 rounded-lg bg-cyan-500/20 border border-cyan-400/30 px-3 py-1 text-xs font-medium text-cyan-300 hover:bg-cyan-500/30 transition-colors"
+                  >
+                    Guthaben aufladen
+                  </a>
+                )}
               </div>
             )}
 
