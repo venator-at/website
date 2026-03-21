@@ -264,13 +264,6 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* No-subscription badge */}
-        <div className="flex justify-center mb-10">
-          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-400/10 px-5 py-2 text-sm font-medium text-cyan-300">
-            ✨ Keine Abo-Falle! Tokens verfallen nie.
-          </span>
-        </div>
-
         {/* 2-card grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
 
