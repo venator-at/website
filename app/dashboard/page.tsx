@@ -755,8 +755,8 @@ export default function DashboardPage() {
         {/* Top bar */}
         <DashboardHeader />
 
-        {/* Hero — Start-First */}
-        <section className="relative w-full overflow-hidden py-12 lg:py-16">
+        {/* Hero — vertically centered prompt */}
+        <section className="relative flex min-h-[calc(100dvh-3.5rem)] w-full flex-col items-center justify-center overflow-hidden px-4">
           {/* Animated background shapes — full width */}
           <ElegantShape
             delay={0.3}
@@ -798,8 +798,8 @@ export default function DashboardPage() {
             gradient="from-sky-500/[0.12]"
             className="left-[22%] top-[2%] pointer-events-none"
           />
-          <div className="relative z-10 mx-auto w-full max-w-6xl px-4">
-          <div className="relative z-10 mx-auto w-full max-w-3xl">
+
+          <div className="relative z-10 w-full max-w-3xl">
             <VercelV0Chat
               value={prompt}
               onChange={setPrompt}
@@ -835,8 +835,11 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+        </section>
 
-          <div className="relative z-10 mt-8 h-[760px] w-full">
+        {/* Graph — visible on scroll */}
+        <section className="mx-auto w-full max-w-6xl px-4 pb-12">
+          <div className="h-[760px] w-full">
             <GraphCanvas
               nodes={graphNodes}
               edges={graphEdges}
@@ -844,7 +847,6 @@ export default function DashboardPage() {
               onNodeSelect={handleNodeSelect}
               onGenerate={() => void handleSubmit()}
             />
-          </div>
           </div>
         </section>
 
