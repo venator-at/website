@@ -214,7 +214,10 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
+    <div className={cn(
+      "flex flex-col bg-slate-950 text-slate-100",
+      pageState === "graph-ready" ? "h-screen overflow-hidden" : "min-h-screen"
+    )}>
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -left-40 top-0 h-[500px] w-[500px] rounded-full bg-cyan-500/8 blur-[120px]" />

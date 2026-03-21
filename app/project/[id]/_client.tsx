@@ -180,7 +180,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
   // ── Loading screen ──────────────────────────────────────────────────────────
   if (authLoading || (!loaded && !loadError)) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-950">
+      <div className="flex h-screen flex-col overflow-hidden bg-slate-950">
         <DashboardHeader />
         <div className="flex flex-1 items-center justify-center">
           <div className="flex flex-col items-center gap-4">
@@ -197,7 +197,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
   // ── Error screen ────────────────────────────────────────────────────────────
   if (loadError && !project) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-950">
+      <div className="flex h-screen flex-col overflow-hidden bg-slate-950">
         <DashboardHeader />
         <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4">
           <div className="flex items-center gap-3 rounded-2xl border border-red-400/25 bg-red-500/10 px-6 py-4 text-red-200">
@@ -218,7 +218,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
   // ── Main view ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-slate-950 text-slate-100">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -left-40 top-0 h-[500px] w-[500px] rounded-full bg-cyan-500/8 blur-[120px]" />
