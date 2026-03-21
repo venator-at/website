@@ -576,13 +576,13 @@ export default function DashboardPage() {
 
           {showGraphContainer && (
             <div
-              className={`absolute inset-0 z-0 flex items-center justify-center px-1 pb-28 pt-6 transition-all duration-700 ease-out ${
+              className={`absolute inset-0 z-0 flex items-start justify-center px-1 pb-44 pt-2 transition-all duration-700 ease-out ${
                 graphContainerOpen
                   ? "translate-y-0 scale-y-100 opacity-100"
                   : "translate-y-6 scale-y-[0.96] opacity-0"
               }`}
             >
-              <div className="h-[640px] w-full overflow-hidden rounded-2xl">
+              <div className="h-[620px] w-full overflow-hidden rounded-2xl">
                 {graphContainerOpen && graphNodes.length > 0 ? (
                   <GraphCanvas
                     nodes={graphNodes}
