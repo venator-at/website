@@ -3,19 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  GitBranch,
-  LayoutDashboard,
-  Loader2,
-  Plus,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
+import { LayoutDashboard, Loader2, Search, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   createProject,
-  deleteProject,
   subscribeToProjects,
 } from "@/lib/firebase/projects";
 import { GraphCanvas } from "@/components/graph/graph-canvas";
@@ -40,293 +31,7 @@ function generateTitle(prompt: string): string {
   return trimmed.slice(0, 37) + "…";
 }
 
-function buildLocalFallbackArchitecture(idea: string): ArchitectureInput {
-  const title = idea.split(/[.!?\n]/)[0]?.trim() || "User platform";
-
-  return {
-    components: [
-      {
-        name: "Frontend",
-        tech: "Next.js",
-        reason: `User interface for: ${title}`.slice(0, 220),
-        alternatives: ["Nuxt", "SvelteKit"],
-        risks: ["Complex UI state can grow quickly"],
-      },
-      {
-        name: "API",
-        tech: "Node.js + Fastify",
-        reason: "Central business logic and secure access to backend services.",
-        alternatives: ["NestJS", "FastAPI"],
-        risks: ["Insufficient validation can break data contracts"],
-      },
-      {
-        name: "Database",
-        tech: "PostgreSQL",
-        reason: "Reliable relational storage for users, projects, and domain entities.",
-        alternatives: ["MySQL", "MongoDB"],
-        risks: ["Schema migrations need discipline"],
-      },
-      {
-        name: "Auth",
-        tech: "Supabase Auth",
-        reason: "Managed authentication with quick setup for sign-in and session handling.",
-        alternatives: ["Firebase Auth", "Auth.js"],
-        risks: ["Provider lock-in if abstraction is missing"],
-      },
-    ],
-    connections: [
-      { from: "Frontend", to: "API", type: "HTTPS requests" },
-      { from: "API", to: "Database", type: "CRUD queries" },
-      { from: "Frontend", to: "Auth", type: "login/signup" },
-      { from: "API", to: "Auth", type: "token validation" },
-    ],
-  };
-}
-
-function groupProjectsByTime(projects: Project[]) {
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOf7Days = new Date(startOfToday.getTime() - 6 * 24 * 60 * 60 * 1000);
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const today: Project[] = [];
-  const last7: Project[] = [];
-  const lastMonth: Project[] = [];
-  const older: Project[] = [];
-
-  for (const p of projects) {
-    const d = p.createdAt;
-    if (d >= startOfToday) today.push(p);
-    else if (d >= startOf7Days) last7.push(p);
-    else if (d >= startOfMonth) lastMonth.push(p);
-    else older.push(p);
-  }
-
-  return { today, last7, lastMonth, older };
-}
-
-const STATUS_COLORS: Record<Project["status"], string> = {
-  draft: "bg-amber-400/15 text-amber-300 border-amber-400/25",
-  "in-progress": "bg-blue-400/15 text-blue-300 border-blue-400/25",
-  completed: "bg-emerald-400/15 text-emerald-300 border-emerald-400/25",
-};
-const STATUS_LABELS: Record<Project["status"], string> = {
-  draft: "Entwurf",
-  "in-progress": "In Arbeit",
-  completed: "Abgeschlossen",
-};
-
-const TECH_COLORS: Record<string, string> = {
-  "Next.js": "bg-slate-700 text-slate-200",
-  React: "bg-cyan-900/60 text-cyan-300",
-  "Node.js": "bg-green-900/60 text-green-300",
-  PostgreSQL: "bg-blue-900/60 text-blue-300",
-  Firebase: "bg-amber-900/60 text-amber-300",
-  Supabase: "bg-emerald-900/60 text-emerald-300",
-  Tailwind: "bg-sky-900/60 text-sky-300",
-  TypeScript: "bg-blue-800/60 text-blue-200",
-  Python: "bg-yellow-900/60 text-yellow-300",
-  FastAPI: "bg-teal-900/60 text-teal-300",
-  MongoDB: "bg-green-800/60 text-green-200",
-  Stripe: "bg-violet-900/60 text-violet-300",
-};
-
-function TechBadge({ tech }: { tech: string }) {
-  const cls = TECH_COLORS[tech] ?? "bg-slate-700 text-slate-300";
-  return (
-    <span
-      className={`inline-flex h-6 items-center rounded-full px-2.5 text-[10px] font-semibold ${cls}`}
-    >
-      {tech}
-    </span>
-  );
-}
-
-function SidebarGroup({
-  label,
-  items,
-}: {
-  label: string;
-  items: Project[];
-}) {
-  if (items.length === 0) return null;
-  return (
-    <div className="mb-4">
-      <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-        {label}
-      </p>
-      {items.map((p) => (
-        <button
-          key={p.id}
-          className="flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200"
-        >
-          <LayoutDashboard className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
-          <span className="line-clamp-2 leading-snug">{p.title}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ─── Abstract SVG placeholder for card background ─────────────────────────────
-
-function AbstractGraph({ seed }: { seed: number }) {
-  const hue = (seed * 47) % 360;
-  const hue2 = (hue + 120) % 360;
-  return (
-    <svg
-      viewBox="0 0 300 100"
-      className="w-full h-full opacity-30"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <radialGradient id={`g${seed}`} cx="50%" cy="50%" r="60%">
-          <stop offset="0%" stopColor={`hsl(${hue},70%,60%)`} stopOpacity="0.8" />
-          <stop offset="100%" stopColor={`hsl(${hue2},60%,40%)`} stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <rect width="300" height="100" fill={`url(#g${seed})`} />
-      {[...Array(5)].map((_, i) => {
-        const x1 = ((seed * (i + 3) * 37) % 260) + 20;
-        const y1 = ((seed * (i + 1) * 61) % 70) + 15;
-        const x2 = ((seed * (i + 7) * 53) % 260) + 20;
-        const y2 = ((seed * (i + 2) * 79) % 70) + 15;
-        return (
-          <line
-            key={i}
-            x1={x1}
-            y1={y1}
-            x2={x2}
-            y2={y2}
-            stroke={`hsl(${hue},80%,70%)`}
-            strokeWidth="1.5"
-            strokeOpacity="0.6"
-          />
-        );
-      })}
-      {[...Array(4)].map((_, i) => {
-        const cx = ((seed * (i + 5) * 41) % 260) + 20;
-        const cy = ((seed * (i + 3) * 67) % 70) + 15;
-        return (
-          <circle
-            key={i}
-            cx={cx}
-            cy={cy}
-            r={4 + (i % 3) * 2}
-            fill={`hsl(${hue2},70%,65%)`}
-            fillOpacity="0.7"
-          />
-        );
-      })}
-    </svg>
-  );
-}
-
-// ─── Project Card ─────────────────────────────────────────────────────────────
-
-function ProjectCard({
-  project,
-  index,
-  onDelete,
-}: {
-  project: Project;
-  index: number;
-  onDelete: (id: string) => void;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const router = useRouter();
-
-  async function handleDelete(e: React.MouseEvent) {
-    e.stopPropagation();
-    setDeleting(true);
-    await onDelete(project.id);
-  }
-
-  return (
-    <div
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-slate-900/60 backdrop-blur-sm transition-all duration-200 hover:border-cyan-400/30 hover:shadow-[0_0_24px_rgba(34,211,238,0.08)] cursor-pointer"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Graph preview */}
-      <div className="relative h-24 overflow-hidden bg-slate-800/40">
-        <AbstractGraph seed={index + 1} />
-        {/* Status badge */}
-        <span
-          className={`absolute top-3 right-3 inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[project.status]}`}
-        >
-          {STATUS_LABELS[project.status]}
-        </span>
-
-        {/* Hover actions */}
-        <div
-          className={`absolute inset-0 flex items-center justify-center gap-3 bg-slate-900/80 backdrop-blur-sm transition-opacity duration-200 ${
-            hovered ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <button
-            onClick={() => router.push(`/dashboard`)}
-            className="flex items-center gap-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400/30 px-3 py-1.5 text-xs font-medium text-cyan-300 hover:bg-cyan-500/30 transition-colors"
-          >
-            <GitBranch className="h-3.5 w-3.5" />
-            Graph öffnen
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="flex items-center gap-1.5 rounded-lg bg-red-500/20 border border-red-400/30 px-3 py-1.5 text-xs font-medium text-red-300 hover:bg-red-500/30 transition-colors disabled:opacity-50"
-          >
-            {deleting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" />
-            )}
-            Löschen
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div>
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-slate-100">
-            {project.title}
-          </h3>
-          <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-            {project.prompt}
-          </p>
-        </div>
-
-        {/* Tech stack */}
-        {project.techStackArray.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {project.techStackArray.slice(0, 4).map((tech) => (
-              <TechBadge key={tech} tech={tech} />
-            ))}
-            {project.techStackArray.length > 4 && (
-              <span className="inline-flex h-6 items-center rounded-full bg-slate-700/60 px-2.5 text-[10px] text-slate-400">
-                +{project.techStackArray.length - 4}
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className="mt-auto flex items-center justify-between pt-1">
-          <span className="text-[11px] text-slate-600">
-            {project.componentCount > 0 ? `${project.componentCount} Komponenten` : "Neu"}
-          </span>
-          <span className="text-[11px] text-slate-600">
-            {project.createdAt.toLocaleDateString("de-AT", {
-              day: "2-digit",
-              month: "short",
-            })}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
+type DashboardUiState = "idle" | "submitting" | "loading" | "graph-ready";
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
@@ -351,7 +56,9 @@ function Sidebar({
       ),
   );
 
-  const grouped = groupProjectsByTime(filtered);
+  const ordered = [...filtered].sort(
+    (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+  );
 
   return (
     <>
@@ -400,17 +107,20 @@ function Sidebar({
 
         {/* Project list */}
         <div className="flex-1 overflow-y-auto px-1 py-2">
-          {projects.length === 0 ? (
+          {ordered.length === 0 ? (
             <p className="px-4 py-6 text-center text-xs text-slate-600">
               Noch keine Projekte
             </p>
           ) : (
-            <>
-              <SidebarGroup label="Heute" items={grouped.today} />
-              <SidebarGroup label="Letzte 7 Tage" items={grouped.last7} />
-              <SidebarGroup label="Letzter Monat" items={grouped.lastMonth} />
-              <SidebarGroup label="Älter" items={grouped.older} />
-            </>
+            ordered.map((project) => (
+              <button
+                key={project.id}
+                className="mb-1 flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200"
+              >
+                <LayoutDashboard className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
+                <span className="line-clamp-2 leading-snug">{project.title}</span>
+              </button>
+            ))
           )}
         </div>
       </aside>
@@ -437,12 +147,13 @@ export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [generatingJson, setGeneratingJson] = useState(false);
+  const [uiState, setUiState] = useState<DashboardUiState>("idle");
   const [generateError, setGenerateError] = useState("");
   const [requestTrace, setRequestTrace] = useState("");
   const [graphNodes, setGraphNodes] = useState<ArchitectureNode[]>([]);
   const [graphEdges, setGraphEdges] = useState<ArchitectureEdge[]>([]);
+  const [pendingArchitecture, setPendingArchitecture] = useState<ArchitectureInput | null>(null);
+  const [graphContainerOpen, setGraphContainerOpen] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState<ArchitectureComponentInput | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [renderVersion, setRenderVersion] = useState(0);
@@ -539,8 +250,8 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const buildGraphFromJson = useCallback(
-    (jsonText: string) => {
+  const parseGraphArchitecture = useCallback(
+    (jsonText: string): ArchitectureInput | null => {
       const parsedResult = parseArchitectureJson(jsonText);
       const architectureInput = parsedResult.ok
         ? parsedResult.data
@@ -549,26 +260,12 @@ export default function DashboardPage() {
       if (!architectureInput) {
         console.error("[GraphBuild] Failed to parse/normalize JSON for graph generation");
         setGenerateError(parsedResult.ok ? "Graph konnte nicht erstellt werden." : parsedResult.error);
-        return false;
+        return null;
       }
 
-      const nextRenderVersion = renderVersion + 1;
-      const transformed = transformArchitectureToGraph(architectureInput, nextRenderVersion);
-      const layouted = layoutGraph(transformed.nodes, transformed.edges, "LR");
-
-      setRenderVersion(nextRenderVersion);
-      setGraphNodes(layouted.nodes);
-      setGraphEdges(layouted.edges);
-      setGenerateError("");
-      console.log("[GraphBuild] Graph generated", {
-        nodes: layouted.nodes.length,
-        edges: layouted.edges.length,
-        renderVersion: nextRenderVersion,
-      });
-
-      return true;
+      return architectureInput;
     },
-    [renderVersion, normalizeAiArchitecture],
+    [normalizeAiArchitecture],
   );
 
   const buildGraphFromArchitecture = useCallback(
@@ -581,7 +278,7 @@ export default function DashboardPage() {
       setGraphNodes(layouted.nodes);
       setGraphEdges(layouted.edges);
       setGenerateError("");
-      console.log("[GraphBuild] Fallback graph generated", {
+      console.log("[GraphBuild] Graph generated", {
         nodes: layouted.nodes.length,
         edges: layouted.edges.length,
         renderVersion: nextRenderVersion,
@@ -590,10 +287,35 @@ export default function DashboardPage() {
     [renderVersion],
   );
 
+  useEffect(() => {
+    if (uiState !== "graph-ready" || !graphContainerOpen || !pendingArchitecture) {
+      return;
+    }
+
+    buildGraphFromArchitecture(pendingArchitecture);
+    setPendingArchitecture(null);
+  }, [uiState, graphContainerOpen, pendingArchitecture, buildGraphFromArchitecture]);
+
+  useEffect(() => {
+    if (uiState !== "graph-ready") {
+      setGraphContainerOpen(false);
+      return;
+    }
+
+    const openTimer = window.setTimeout(() => {
+      setGraphContainerOpen(true);
+    }, 40);
+
+    return () => {
+      window.clearTimeout(openTimer);
+    };
+  }, [uiState]);
+
   const handleSubmit = useCallback(
     async (e?: React.FormEvent) => {
       e?.preventDefault();
       const idea = prompt.trim();
+      const isBusy = uiState === "submitting" || uiState === "loading";
 
       if (!idea) {
         setGenerateError("Bitte gib zuerst eine Idee ein.");
@@ -601,7 +323,7 @@ export default function DashboardPage() {
         return;
       }
 
-      if (submitting || generatingJson) {
+      if (isBusy) {
         setRequestTrace("Kein neuer POST: Anfrage laeuft bereits.");
         return;
       }
@@ -611,8 +333,15 @@ export default function DashboardPage() {
         userId: user?.uid ?? "guest",
       });
 
-      setSubmitting(true);
-      setGeneratingJson(true);
+      const loadingStateTimer = window.setTimeout(() => {
+        setUiState((current) => (current === "submitting" ? "loading" : current));
+      }, 520);
+
+      setUiState("submitting");
+      setGraphContainerOpen(false);
+      setPendingArchitecture(null);
+      setGraphNodes([]);
+      setGraphEdges([]);
       setGenerateError("");
       setRequestTrace("POST /api/ai/generate-json wird gesendet...");
       setSelectedComponent(null);
@@ -644,61 +373,54 @@ export default function DashboardPage() {
 
         if (!response.ok || !data.jsonText) {
           console.error("[DashboardSubmit] AI route failed", data.error ?? "Unknown error");
-          buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
+          setUiState("idle");
           setGenerateError(
-            `KI-Antwort fehlgeschlagen (Request-ID: ${requestId}). Fallback-Graph wurde lokal erstellt.`,
+            `KI-Antwort fehlgeschlagen (Request-ID: ${requestId}). Bitte erneut versuchen.`,
           );
           return;
         }
 
-        const graphBuilt = buildGraphFromJson(data.jsonText);
+        const architectureInput = parseGraphArchitecture(data.jsonText);
 
-        if (graphBuilt) {
-          setPrompt("");
+        if (!architectureInput) {
+          setUiState("idle");
+          return;
+        }
 
-          if (firebaseConfigured && user) {
-            void createProject({
-              userId: user.uid,
-              title: generateTitle(idea),
-              prompt: idea,
-              status: "draft",
-              techStackArray: [],
-              componentCount: 0,
-            }).catch((persistError) => {
-              console.warn("[DashboardSubmit] Draft save failed (non-blocking)", persistError);
-            });
-          }
-        } else {
-          buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
-          setGenerateError(
-            "KI-JSON war ungueltig. Fallback-Graph wurde lokal erstellt.",
-          );
+        setPendingArchitecture(architectureInput);
+        setPrompt("");
+        setUiState("graph-ready");
+
+        if (firebaseConfigured && user) {
+          void createProject({
+            userId: user.uid,
+            title: generateTitle(idea),
+            prompt: idea,
+            status: "draft",
+            techStackArray: [],
+            componentCount: 0,
+          }).catch((persistError) => {
+            console.warn("[DashboardSubmit] Draft save failed (non-blocking)", persistError);
+          });
         }
       } catch (error) {
         console.error("[DashboardSubmit] Unexpected submit error", error);
         setRequestTrace("POST fehlgeschlagen vor Antwort (Netzwerk/Blocker/CORS).");
-        buildGraphFromArchitecture(buildLocalFallbackArchitecture(idea));
-        setGenerateError("Die Anfrage ist fehlgeschlagen. Fallback-Graph wurde lokal erstellt.");
+        setGenerateError("Die Anfrage ist fehlgeschlagen. Bitte erneut versuchen.");
+        setUiState("idle");
       } finally {
-        setGeneratingJson(false);
-        setSubmitting(false);
+        window.clearTimeout(loadingStateTimer);
         console.log("[DashboardSubmit] Submit finished");
       }
     },
     [
       prompt,
       user,
-      submitting,
-      generatingJson,
+      uiState,
       firebaseConfigured,
-      buildGraphFromJson,
-      buildGraphFromArchitecture,
+      parseGraphArchitecture,
     ],
   );
-
-  const handleDelete = useCallback(async (id: string) => {
-    await deleteProject(id);
-  }, []);
 
   const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
     setSelectedComponent(component);
@@ -706,6 +428,8 @@ export default function DashboardPage() {
   }, []);
 
   const displayName = user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "there";
+  const isBusy = uiState === "submitting" || uiState === "loading";
+  const showGraphContainer = uiState === "graph-ready";
 
   if (authLoading) {
     return (
@@ -733,27 +457,27 @@ export default function DashboardPage() {
       />
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
         <DashboardHeader />
 
-        {/* Hero — Start-First */}
-        <section className="mx-auto w-full max-w-6xl px-4 py-12 lg:py-16">
-          <div className="mx-auto w-full max-w-3xl">
+        <section className="relative mx-auto h-full w-full max-w-6xl overflow-hidden px-4 pb-10 pt-4 lg:pt-6">
+          <div
+            className={`pointer-events-none absolute left-0 right-0 z-20 mx-auto w-full max-w-3xl transform px-4 transition-all duration-700 ease-out lg:px-0 ${
+              uiState === "idle"
+                ? "top-1/2 -translate-y-1/2"
+                : "bottom-6 translate-y-0"
+            }`}
+          >
+            <div className="pointer-events-auto">
             <VercelV0Chat
               value={prompt}
               onChange={setPrompt}
               onSubmit={() => void handleSubmit()}
-              submitting={submitting || generatingJson}
+              submitting={isBusy}
               displayName={displayName}
             />
-
-            {(submitting || generatingJson) && (
-              <div className="mt-4 flex items-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                KI generiert Architektur-JSON und baut den Graph…
-              </div>
-            )}
+            </div>
 
             {generateError && (
               <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
@@ -768,15 +492,44 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="mt-8 h-[760px] w-full">
-            <GraphCanvas
-              nodes={graphNodes}
-              edges={graphEdges}
-              isLoading={submitting || generatingJson}
-              onNodeSelect={handleNodeSelect}
-              onGenerate={() => void handleSubmit()}
-            />
-          </div>
+          {uiState === "idle" && (
+            <div className="pointer-events-none absolute left-1/2 top-[67%] z-10 w-full max-w-3xl -translate-x-1/2 px-4 text-center text-sm text-slate-400 lg:px-0">
+              your graph will appear here
+            </div>
+          )}
+
+          {isBusy && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
+              <div className="rounded-full border border-cyan-300/35 bg-slate-900/75 p-5 backdrop-blur-sm">
+                <Loader2 className="h-9 w-9 animate-spin text-cyan-300" />
+              </div>
+            </div>
+          )}
+
+          {showGraphContainer && (
+            <div
+              className={`absolute inset-x-0 top-6 z-0 transition-all duration-700 ease-out ${
+                graphContainerOpen
+                  ? "translate-y-0 scale-y-100 opacity-100"
+                  : "translate-y-6 scale-y-[0.96] opacity-0"
+              }`}
+            >
+              <div className="h-[640px] w-full overflow-hidden rounded-2xl">
+                {graphContainerOpen && graphNodes.length > 0 ? (
+                  <GraphCanvas
+                    nodes={graphNodes}
+                    edges={graphEdges}
+                    onNodeSelect={handleNodeSelect}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center rounded-2xl border border-cyan-400/20 bg-slate-900/60 text-sm text-slate-300 backdrop-blur-sm">
+                    Generating graph...
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </section>
 
         <ComponentDetailsSheet
@@ -785,42 +538,6 @@ export default function DashboardPage() {
           onOpenChange={setDetailsOpen}
         />
 
-        {/* Project grid */}
-        {projects.length > 0 && (
-          <section className="mx-auto w-full max-w-6xl px-4 pb-12 lg:px-6">
-            <div className="mb-5 flex items-center gap-3">
-              <h2 className="text-sm font-semibold text-slate-400">
-                Deine Projekte
-              </h2>
-              <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-500">
-                {projects.length}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project, i) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  index={i}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Empty state */}
-        {projects.length === 0 && !authLoading && (
-          <div className="mx-auto flex max-w-sm flex-col items-center gap-3 px-4 py-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/8 bg-slate-800/60">
-              <Plus className="h-6 w-6 text-slate-500" />
-            </div>
-            <p className="text-sm text-slate-600">
-              Noch keine Projekte. Beschreibe deine Idee oben!
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -12,8 +12,6 @@ import {
   type NodeMouseHandler,
   type ReactFlowInstance,
 } from "@xyflow/react";
-import { Loader2, MoveRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ExportActions } from "@/components/toolbar/export-actions";
 import { exportGraphAsPng, exportGraphAsSvg } from "@/lib/export/export-graph";
 import type {
@@ -27,9 +25,7 @@ import "@xyflow/react/dist/style.css";
 interface GraphCanvasProps {
   nodes: ArchitectureNode[];
   edges: ArchitectureEdge[];
-  isLoading: boolean;
   onNodeSelect: (component: ArchitectureComponentInput) => void;
-  onGenerate: () => void;
 }
 
 const nodeTypes = {
@@ -39,9 +35,7 @@ const nodeTypes = {
 export function GraphCanvas({
   nodes,
   edges,
-  isLoading,
   onNodeSelect,
-  onGenerate,
 }: GraphCanvasProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance<ArchitectureNode, ArchitectureEdge> | null>(null);
@@ -135,32 +129,6 @@ export function GraphCanvas({
       </div>
 
       <div ref={wrapperRef} className="relative flex-1">
-        {!hasGraph && !isLoading ? (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-slate-950/60 p-8 text-center backdrop-blur-sm">
-            <div className="rounded-full border border-cyan-300/35 bg-cyan-400/15 p-3 text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.35)]">
-              <MoveRight className="h-7 w-7" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-slate-100">Your graph will appear here</h3>
-              <p className="max-w-md text-sm text-slate-300">Load a preset or write your own JSON, then generate.</p>
-            </div>
-
-            <Button
-              onClick={onGenerate}
-              className="rounded-full border border-cyan-300/45 bg-cyan-400/15 px-5 text-cyan-100 hover:bg-cyan-300/25"
-            >
-              Generate Graph
-            </Button>
-          </div>
-        ) : null}
-
-        {isLoading ? (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-slate-950/70 backdrop-blur-sm">
-            <Loader2 className="h-8 w-8 animate-spin text-cyan-300" />
-            <p className="text-sm font-medium text-slate-100">Preparing graph and running entrance animation...</p>
-          </div>
-        ) : null}
-
         <ReactFlow<ArchitectureNode, ArchitectureEdge>
           nodes={canvasNodes}
           edges={canvasEdges}
