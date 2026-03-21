@@ -450,7 +450,7 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
             "min-h-0 flex-1 flex flex-col overflow-hidden rounded-2xl transition-all duration-700 ease-out",
             graphContainerOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            {graphContainerOpen && graphNodes.length > 0 ? (
+            {graphNodes.length > 0 ? (
               <GraphCanvas
                 nodes={graphNodes}
                 edges={graphEdges}
