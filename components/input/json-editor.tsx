@@ -1,9 +1,10 @@
 "use client";
 
-import { Braces, RefreshCw, Sparkles } from "lucide-react";
+import { Braces, FileJson2, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { EmptyState } from "@/components/ui/interactive-empty-state";
 
 interface JsonExampleOption {
   id: string;
@@ -77,12 +78,31 @@ export function JsonEditor({
           </p>
         </div>
 
-        <Textarea
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className="h-[56vh] max-h-[680px] min-h-[360px] resize-none overflow-y-auto border-cyan-200/20 bg-[#030712]/90 font-mono text-sm leading-6 text-cyan-100 shadow-[inset_0_0_0_1px_rgba(56,189,248,0.08),inset_0_16px_40px_rgba(0,0,0,0.45)] focus-visible:ring-cyan-400 md:h-[62vh]"
-          spellCheck={false}
-        />
+        {value.trim() === "" ? (
+          <EmptyState
+            theme="dark"
+            title="No architecture defined"
+            description="Paste your JSON architecture definition or pick an example above to visualise your stack."
+            icons={[
+              <FileJson2 key="i1" className="h-6 w-6" />,
+              <Braces key="i2" className="h-6 w-6" />,
+              <Sparkles key="i3" className="h-6 w-6" />,
+            ]}
+            action={{
+              label: "Load first example",
+              icon: <RefreshCw className="h-4 w-4" />,
+              onClick: () => onLoadExample(examples[0]?.id ?? ""),
+            }}
+            className="h-[56vh] max-h-[680px] min-h-[360px] md:h-[62vh] border-cyan-300/20 bg-[#030712]/90 hover:border-cyan-300/40"
+          />
+        ) : (
+          <Textarea
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            className="h-[56vh] max-h-[680px] min-h-[360px] resize-none overflow-y-auto border-cyan-200/20 bg-[#030712]/90 font-mono text-sm leading-6 text-cyan-100 shadow-[inset_0_0_0_1px_rgba(56,189,248,0.08),inset_0_16px_40px_rgba(0,0,0,0.45)] focus-visible:ring-cyan-400 md:h-[62vh]"
+            spellCheck={false}
+          />
+        )}
 
         {error ? (
           <p className="rounded-md border border-rose-400/40 bg-rose-500/15 px-3 py-2 text-sm text-rose-100">{error}</p>

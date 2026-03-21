@@ -11,7 +11,7 @@ import {
   NavigationMenuList,
   NavigationMenuItem,
 } from '@/components/ui/navigation-menu';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { LayoutDashboard, LogOut, Zap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
@@ -76,11 +76,31 @@ function MobileMenu({ open, children, className, ...props }: MobileMenuProps) {
 
 // ─── User avatar ─────────────────────────────────────────────────────────────
 
-function UserAvatar({ displayName, email }: { displayName: string | null; email: string | null }) {
+function CreditsBadge({ credits }: { credits: number }) {
+  const low = credits < 10;
+  return (
+    <Link
+      href="/buy-credits"
+      className={cn(
+        'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
+        low
+          ? 'bg-red-500/15 border border-red-400/30 text-red-300 hover:bg-red-500/25'
+          : 'bg-cyan-500/10 border border-cyan-400/20 text-cyan-300 hover:bg-cyan-500/20',
+      )}
+      title="Credits aufladen"
+    >
+      <Zap className="h-3 w-3" />
+      {credits} Credits
+    </Link>
+  );
+}
+
+function UserAvatar({ displayName, email, credits }: { displayName: string | null; email: string | null; credits: number }) {
   const initial = (displayName?.[0] ?? email?.[0] ?? '?').toUpperCase();
 
   return (
     <div className="flex items-center gap-2">
+      <CreditsBadge credits={credits} />
       <button
         onClick={handleFirebaseSignOut}
         className="hidden items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors md:flex"
@@ -101,7 +121,7 @@ function UserAvatar({ displayName, email }: { displayName: string | null; email:
 export function DashboardHeader() {
   const [open, setOpen] = React.useState(false);
   const scrolled = useScroll(10);
-  const { user } = useAuth();
+  const { user, credits } = useAuth();
 
   React.useEffect(() => {
     if (open) {
@@ -152,7 +172,7 @@ export function DashboardHeader() {
         {/* Desktop right side */}
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
-            <UserAvatar displayName={user.displayName} email={user.email} />
+            <UserAvatar displayName={user.displayName} email={user.email} credits={credits} />
           ) : (
             <>
               <Link

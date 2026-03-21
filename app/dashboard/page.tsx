@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { LayoutDashboard, Loader2, Search, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/lib/firebase/config";
+import { getIdToken } from "firebase/auth";
 import {
   createProject,
   subscribeToProjects,
@@ -22,6 +24,7 @@ import type {
 } from "@/types/architecture";
 import { VercelV0Chat } from "@/components/ui/v0-ai-chat";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { ElegantShape } from "@/components/ui/shape-landing-hero";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -348,10 +351,17 @@ export default function DashboardPage() {
       setDetailsOpen(false);
 
       try {
+        // Get Firebase ID token for auth + credit check
+        let idToken: string | undefined;
+        if (user && auth?.currentUser) {
+          idToken = await getIdToken(auth.currentUser, /* forceRefresh */ false).catch(() => undefined);
+        }
+
         const response = await fetch("/api/ai/generate-json", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
           },
           body: JSON.stringify({ idea }),
         });
@@ -370,6 +380,14 @@ export default function DashboardPage() {
         };
 
         const requestId = data.requestId ?? responseRequestId;
+
+        if (response.status === 402) {
+          setGenerateError(
+            `Nicht genug Credits. Bitte lade dein Guthaben auf, um fortzufahren.`,
+          );
+          setRequestTrace("Aufladen unter /buy-credits");
+          return;
+        }
 
         if (!response.ok || !data.jsonText) {
           console.error("[DashboardSubmit] AI route failed", data.error ?? "Unknown error");
@@ -462,6 +480,47 @@ export default function DashboardPage() {
         <DashboardHeader />
 
         <section className="relative mx-auto h-full w-full max-w-6xl overflow-hidden px-4 pb-10 pt-4 lg:pt-6">
+          <ElegantShape
+            delay={0.3}
+            width={500}
+            height={120}
+            rotate={12}
+            gradient="from-cyan-500/[0.12]"
+            className="left-[-4%] top-[10%] pointer-events-none"
+          />
+          <ElegantShape
+            delay={0.5}
+            width={400}
+            height={100}
+            rotate={-15}
+            gradient="from-fuchsia-500/[0.12]"
+            className="right-[-2%] bottom-[15%] pointer-events-none"
+          />
+          <ElegantShape
+            delay={0.4}
+            width={250}
+            height={70}
+            rotate={-8}
+            gradient="from-indigo-500/[0.12]"
+            className="left-[5%] bottom-[5%] pointer-events-none"
+          />
+          <ElegantShape
+            delay={0.6}
+            width={180}
+            height={50}
+            rotate={20}
+            gradient="from-violet-500/[0.12]"
+            className="right-[18%] top-[5%] pointer-events-none"
+          />
+          <ElegantShape
+            delay={0.7}
+            width={130}
+            height={38}
+            rotate={-25}
+            gradient="from-sky-500/[0.12]"
+            className="left-[22%] top-[2%] pointer-events-none"
+          />
+
           <div
             className={`pointer-events-none absolute left-0 right-0 z-20 mx-auto w-full max-w-3xl transform px-4 transition-all duration-700 ease-out lg:px-0 ${
               uiState === "idle"
@@ -480,8 +539,16 @@ export default function DashboardPage() {
             </div>
 
             {generateError && (
-              <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-                {generateError}
+              <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200 flex items-center justify-between gap-3">
+                <span>{generateError}</span>
+                {generateError.includes("Credits") && (
+                  <a
+                    href="/buy-credits"
+                    className="shrink-0 rounded-lg bg-cyan-500/20 border border-cyan-400/30 px-3 py-1 text-xs font-medium text-cyan-300 hover:bg-cyan-500/30 transition-colors"
+                  >
+                    Guthaben aufladen
+                  </a>
+                )}
               </div>
             )}
 
@@ -529,7 +596,6 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-
         </section>
 
         <ComponentDetailsSheet
