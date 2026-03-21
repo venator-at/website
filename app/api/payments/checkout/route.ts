@@ -30,14 +30,15 @@ export async function POST(request: Request) {
     const stripe = getStripe();
 
     if (pack === "custom") {
-      if (!customAmount || customAmount < 5 || !Number.isInteger(customAmount)) {
+      if (!customAmount || customAmount < 5 || customAmount > 999999.99) {
         return NextResponse.json(
-          { error: "Mindestbetrag für Custom-Pakete ist 5€ (ganzzahlig)." },
+          { error: "Betrag muss zwischen 5€ und 999.999,99€ liegen." },
           { status: 400 },
         );
       }
 
-      const credits = customAmount * CREDITS_PER_EURO;
+      const amountInCents = Math.round(customAmount * 100);
+      const credits = Math.floor((amountInCents / 100) * CREDITS_PER_EURO);
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
             price_data: {
               currency: "eur",
               product_data: { name: "Venator Credits" },
-              unit_amount: customAmount * 100,
+              unit_amount: amountInCents,
             },
             quantity: 1,
           },

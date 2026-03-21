@@ -59,8 +59,8 @@ export default function BuyCreditsPage() {
 
   function handleCustomBuy() {
     setCustomError("");
-    if (!Number.isInteger(customAmount) || customAmount < 5) {
-      setCustomError("Mindestbetrag ist 5€ (ganzzahlig).");
+    if (customAmount < 5 || customAmount > 999999.99) {
+      setCustomError("Betrag muss zwischen 5€ und 999.999,99€ liegen.");
       return;
     }
     void handleBuy("custom", customAmount);
@@ -184,9 +184,9 @@ export default function BuyCreditsPage() {
               <input
                 type="range"
                 min={5}
-                max={100}
+                max={1000}
                 step={1}
-                value={customAmount}
+                value={Math.min(customAmount, 1000)}
                 onChange={(e) => {
                   setCustomAmount(Number(e.target.value));
                   setCustomError("");
@@ -195,7 +195,7 @@ export default function BuyCreditsPage() {
               />
               <div className="flex justify-between text-[10px] text-slate-600 mt-0.5">
                 <span>5€</span>
-                <span>100€</span>
+                <span>1.000€+</span>
               </div>
             </div>
 
@@ -204,11 +204,12 @@ export default function BuyCreditsPage() {
               <input
                 type="number"
                 min={5}
-                step={1}
+                max={999999.99}
+                step={0.01}
                 value={customAmount}
                 onChange={(e) => {
-                  const val = Math.max(5, Math.floor(Number(e.target.value)));
-                  setCustomAmount(val);
+                  const val = Math.max(5, Number(e.target.value));
+                  setCustomAmount(Math.round(val * 100) / 100);
                   setCustomError("");
                 }}
                 className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm text-slate-100 focus:border-cyan-500/60 focus:outline-none"
@@ -224,12 +225,12 @@ export default function BuyCreditsPage() {
               <li className="flex items-center gap-2 text-sm text-slate-300">
                 <Check className="h-4 w-4 text-cyan-400 shrink-0" />
                 <span className="font-semibold text-slate-100">
-                  {customAmount * CREDITS_PER_EURO} Credits
+                  {Math.floor(customAmount * CREDITS_PER_EURO)} Credits
                 </span>
               </li>
               <li className="flex items-center gap-2 text-sm text-slate-400">
                 <Check className="h-4 w-4 text-cyan-400 shrink-0" />
-                {customAmount * CREDITS_PER_EURO / 10} complete architectures
+                {Math.floor(customAmount * CREDITS_PER_EURO / 10)} complete architectures
               </li>
               <li className="flex items-center gap-2 text-sm text-slate-400">
                 <Check className="h-4 w-4 text-cyan-400 shrink-0" />
