@@ -5,10 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpIcon,
-  ShoppingCart,
-  SmartphoneNfc,
-  Sparkles,
-  Users,
   Loader2,
   Paperclip,
   X,
@@ -62,25 +58,25 @@ function useAutoResizeTextarea({ minHeight, maxHeight }: UseAutoResizeTextareaPr
 
 const STARTERS = [
   {
-    icon: ShoppingCart,
+    emoji: "🛒",
     label: "E-Commerce Plattform",
     prompt:
       "Ich möchte eine E-Commerce-Plattform für handgemachte Produkte bauen, mit Produktkatalog, Warenkorb und Stripe-Bezahlung.",
   },
   {
-    icon: SmartphoneNfc,
+    emoji: "📱",
     label: "Social Media App",
     prompt:
       "Eine Social-Media-App, auf der Nutzer kurze Beiträge posten, anderen folgen und Feed-Beiträge liken können.",
   },
   {
-    icon: Sparkles,
+    emoji: "🤖",
     label: "KI-SaaS Wrapper",
     prompt:
       "Ein KI-SaaS-Produkt, das GPT-4 nutzt, um automatisch Marketing-Texte und Social-Media-Posts zu generieren.",
   },
   {
-    icon: Users,
+    emoji: "📊",
     label: "Admin Dashboard",
     prompt:
       "Ein internes Admin-Dashboard für ein kleines Team mit Datentabellen, Rollenverwaltung und Analytics-Charts.",
@@ -267,16 +263,16 @@ export function VercelV0Chat({
           </div>
         </div>
 
-        {/* Starter badges */}
-        <div className="flex flex-wrap justify-center gap-2 mt-4">
+        {/* Starter chips */}
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:justify-center">
           {STARTERS.map((s) => (
             <button
               key={s.label}
               type="button"
               onClick={() => handleStarterClick(s.prompt)}
-              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/8 hover:text-cyan-300"
+              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white/90"
             >
-              <s.icon className="h-3.5 w-3.5" />
+              <span>{s.emoji}</span>
               {s.label}
             </button>
           ))}
