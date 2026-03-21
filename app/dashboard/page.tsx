@@ -560,11 +560,6 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {uiState === "idle" && (
-            <div className="pointer-events-none absolute left-1/2 top-[67%] z-10 w-full max-w-3xl -translate-x-1/2 px-4 text-center text-sm text-slate-400 lg:px-0">
-              your graph will appear here
-            </div>
-          )}
 
           {isBusy && (
             <div className="absolute inset-0 z-10 flex items-center justify-center">

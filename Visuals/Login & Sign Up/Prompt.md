@@ -1,4 +1,4 @@
-You are given a task to integrate an existing React component into our codebase.
+You are given a tak to integrate an existing React component into our codebase.
 
 Please adhere strictly to our project architecture and conventions detailed in `CLAUDE.md`:
 - **Framework**: Next.js 15 (App Router)
@@ -17,7 +17,7 @@ modern-animated-sign-in.tsx
 'use client';
 import {
   memo,
-  ReactNode,
+  ReactNode,S
   useState,
   ChangeEvent,
   FormEvent,

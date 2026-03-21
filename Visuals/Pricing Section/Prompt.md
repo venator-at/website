@@ -11,301 +11,194 @@ Determine the default path for components and styles.
 If default path for components is not /components/ui, provide instructions on why it's important to create this folder
 Copy-paste this component to /components/ui folder:
 ```tsx
-pricing.tsx
-"use client";
+single-pricing-card-1.tsx
+'use client';
+import React from 'react';
+import { PlusIcon, ShieldCheckIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Badge } from './badge';
+import { Button } from './button';
+import { cn } from '@/lib/utils';
+import { BorderTrail } from './border-trail';
 
-import { buttonVariants } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { Check, Star } from "lucide-react";
-import Link from "next/link";
-import { useState, useRef } from "react";
-import confetti from "canvas-confetti";
-import NumberFlow from "@number-flow/react";
+export function Pricing() {
+	return (
+		<section className="relative min-h-screen overflow-hidden py-24">
+			<div id="pricing" className="mx-auto w-full max-w-6xl space-y-5 px-4">
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+					viewport={{ once: true }}
+					className="mx-auto max-w-xl space-y-5"
+				>
+					<div className="flex justify-center">
+						<div className="rounded-lg border px-4 py-1 font-mono">Pricing</div>
+					</div>
+					<h2 className="mt-5 text-center text-2xl font-bold tracking-tighter md:text-3xl lg:text-4xl">
+						Simple Pricing for Your Architecture Planning
+					</h2>
+					<p className="text-muted-foreground mt-5 text-center text-sm md:text-base">
+						Choose the right plan for your project. Venator helps you structure your software architecture effortlessly.
+					</p>
+				</motion.div>
 
-interface PricingPlan {
-  name: string;
-  price: string;
-  yearlyPrice: string;
-  period: string;
-  features: string[];
-  description: string;
-  buttonText: string;
-  href: string;
-  isPopular: boolean;
+				<div className="relative">
+					<div
+						className={cn(
+							'z--10 pointer-events-none absolute inset-0 size-full',
+							'bg-[linear-gradient(to_right,--theme(--color-foreground/.2)_1px,transparent_1px),linear-gradient(to_bottom,--theme(--color-foreground/.2)_1px,transparent_1px)]',
+							'bg-[size:32px_32px]',
+							'[mask-image:radial-gradient(ellipse_at_center,var(--background)_10%,transparent)]',
+						)}
+					/>
+
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+						viewport={{ once: true }}
+						className="mx-auto w-full max-w-2xl space-y-2"
+					>	
+						<div className="grid md:grid-cols-3 bg-background relative border p-4 gap-4">
+							<PlusIcon className="absolute -top-3 -left-3  size-5.5" />
+							<PlusIcon className="absolute -top-3 -right-3 size-5.5" />
+							<PlusIcon className="absolute -bottom-3 -left-3 size-5.5" />
+							<PlusIcon className="absolute -right-3 -bottom-3 size-5.5" />
+
+							<div className="w-full px-4 pt-5 pb-4">
+								<div className="space-y-1">
+									<div className="flex items-center justify-between">
+										<h3 className="leading-none font-semibold">Beginner</h3>
+									</div>
+									<p className="text-muted-foreground text-sm">Perfect for your first software project.</p>
+								</div>
+								<div className="mt-10 space-y-4">
+									<div className="text-muted-foreground flex items-end gap-0.5 text-xl">
+										<span>€</span>
+										<span className="text-foreground -mb-0.5 text-4xl font-extrabold tracking-tighter md:text-5xl">
+											5
+										</span>
+										<span>/month</span>
+									</div>
+									<Button className="w-full" variant="outline" asChild>
+										<a href="#">Start Planning</a>
+									</Button>
+								</div>
+							</div>
+							<div className="relative w-full rounded-lg border px-4 pt-5 pb-4">
+								<BorderTrail
+									style={{
+										boxShadow:
+											'0px 0px 60px 30px rgb(255 255 255 / 50%), 0 0 100px 60px rgb(0 0 0 / 50%), 0 0 140px 90px rgb(0 0 0 / 50%)',
+									}}
+									size={100}
+								/>
+								<div className="space-y-1">
+									<div className="flex items-center justify-between">
+										<h3 className="leading-none font-semibold">Pro</h3>
+										<div className="flex items-center gap-x-1">
+											<Badge>Most Popular</Badge>
+										</div>
+									</div>
+									<p className="text-muted-foreground text-sm">For complex projects and junior developers.</p>
+								</div>
+								<div className="mt-10 space-y-4">
+									<div className="text-muted-foreground flex items-end text-xl">
+										<span>€</span>
+										<span className="text-foreground -mb-0.5 text-4xl font-extrabold tracking-tighter md:text-5xl">
+											10
+										</span>
+										<span>/month</span>
+									</div>
+									<Button className="w-full" asChild>
+										<a href="#">Get Started Now</a>
+									</Button>
+								</div>
+							</div>
+							<div className="w-full px-4 pt-5 pb-4">
+								<div className="space-y-1">
+									<div className="flex items-center justify-between">
+										<h3 className="leading-none font-semibold">Enterprise</h3>
+									</div>
+									<p className="text-muted-foreground text-sm">Tailored architecture solutions for teams.</p>
+								</div>
+								<div className="mt-10 space-y-4">
+									<div className="text-muted-foreground flex items-end gap-0.5 text-xl">
+										<span className="text-foreground -mb-0.5 text-4xl font-extrabold tracking-tighter md:text-4xl">
+											Custom
+										</span>
+									</div>
+									<Button className="w-full" variant="outline" asChild>
+										<a href="#">Contact Us</a>
+									</Button>
+								</div>
+							</div>
+						</div>
+
+						<div className="text-muted-foreground flex items-center justify-center gap-x-2 text-sm">
+							<ShieldCheckIcon className="size-4" />
+							<span>Access to all features with no hidden fees</span>
+						</div>
+					</motion.div>
+				</div>
+			</div>
+		</section>
+	);
 }
 
-interface PricingProps {
-  plans: PricingPlan[];
-  title?: string;
-  description?: string;
-}
-
-export function Pricing({
-  plans,
-  title = "Simple, Transparent Pricing",
-  description = "Choose the plan that works for you\nAll plans include access to our platform, lead generation tools, and dedicated support.",
-}: PricingProps) {
-  const [isMonthly, setIsMonthly] = useState(true);
-  const isDesktop = useMediaQuery("(min-width: 768px)");
-  const switchRef = useRef<HTMLButtonElement>(null);
-
-  const handleToggle = (checked: boolean) => {
-    setIsMonthly(!checked);
-    if (checked && switchRef.current) {
-      const rect = switchRef.current.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: {
-          x: x / window.innerWidth,
-          y: y / window.innerHeight,
-        },
-        colors: [
-          "hsl(var(--primary))",
-          "hsl(var(--accent))",
-          "hsl(var(--secondary))",
-          "hsl(var(--muted))",
-        ],
-        ticks: 200,
-        gravity: 1.2,
-        decay: 0.94,
-        startVelocity: 30,
-        shapes: ["circle"],
-      });
-    }
-  };
-
-  return (
-    <div className="container py-20 font-sans">
-      <div className="text-center space-y-4 mb-12">
-        <h2 className="text-4xl font-bold tracking-tight sm:text-5xl geist-font">
-          {title}
-        </h2>
-        <p className="text-muted-foreground text-lg whitespace-pre-line inter-font">
-          {description}
-        </p>
-      </div>
-
-      <div className="flex justify-center mb-10">
-        <label className="relative inline-flex items-center cursor-pointer">
-          <Label>
-            <Switch
-              ref={switchRef as any}
-              checked={!isMonthly}
-              onCheckedChange={handleToggle}
-              className="relative"
-            />
-          </Label>
-        </label>
-        <span className="ml-2 font-semibold inter-font">
-          Annual billing <span className="text-primary">(Save 20%)</span>
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 sm:2 gap-4">
-        {plans.map((plan, index) => (
-          <motion.div
-            key={index}
-            initial={{ y: 50, opacity: 1 }}
-            whileInView={
-              isDesktop
-                ? {
-                    y: plan.isPopular ? -20 : 0,
-                    opacity: 1,
-                    x: index === 2 ? -30 : index === 0 ? 30 : 0,
-                    scale: index === 0 || index === 2 ? 0.94 : 1.0,
-                  }
-                : {}
-            }
-            viewport={{ once: true }}
-            transition={{
-              duration: 1.6,
-              type: "spring",
-              stiffness: 100,
-              damping: 30,
-              delay: 0.4,
-              opacity: { duration: 0.5 },
-            }}
-            className={cn(
-              `rounded-2xl border-[1px] p-6 bg-background text-center lg:flex lg:flex-col lg:justify-center relative`,
-              plan.isPopular ? "border-primary border-2 shadow-lg" : "border-border shadow-sm",
-              "flex flex-col",
-              !plan.isPopular && "mt-5",
-              index === 0 || index === 2
-                ? "z-0 transform translate-x-0 translate-y-0 -translate-z-[50px] rotate-y-[10deg]"
-                : "z-10",
-              index === 0 && "origin-right",
-              index === 2 && "origin-left"
-            )}
-          >
-            {plan.isPopular && (
-              <div className="absolute top-0 right-0 bg-primary py-0.5 px-2 rounded-bl-xl rounded-tr-xl flex items-center">
-                <Star className="text-primary-foreground h-4 w-4 fill-current" />
-                <span className="text-primary-foreground ml-1 font-sans font-semibold text-sm">
-                  Popular
-                </span>
-              </div>
-            )}
-            <div className="flex-1 flex flex-col">
-              <p className="text-base font-semibold text-muted-foreground geist-font">
-                {plan.name}
-              </p>
-              <div className="mt-6 flex items-center justify-center gap-x-2">
-                <span className="text-5xl font-bold tracking-tight text-foreground geist-font">
-                  <NumberFlow
-                    value={
-                      isMonthly ? Number(plan.price) : Number(plan.yearlyPrice)
-                    }
-                    format={{
-                      style: "currency",
-                      currency: "USD",
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 0,
-                    }}
-                    formatter={(value) => `$${value}`}
-                    transformTiming={{
-                      duration: 500,
-                      easing: "ease-out",
-                    }}
-                    willChange
-                    className="font-variant-numeric: tabular-nums"
-                  />
-                </span>
-                {plan.period !== "Next 3 months" && (
-                  <span className="text-sm font-semibold leading-6 tracking-wide text-muted-foreground inter-font">
-                    / {plan.period}
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs leading-5 text-muted-foreground inter-font mt-1">
-                {isMonthly ? "billed monthly" : "billed annually"}
-              </p>
-
-              <ul className="mt-5 gap-3 flex flex-col">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-left text-sm inter-font">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <hr className="w-full my-6 border-border" />
-
-              <Link
-                href={plan.href}
-                className={cn(
-                  buttonVariants({
-                    variant: "outline",
-                  }),
-                  "group relative w-full gap-2 overflow-hidden text-sm font-semibold tracking-tight inter-font",
-                  "transform-gpu ring-offset-current transition-all duration-300 ease-out hover:ring-2 hover:ring-primary hover:ring-offset-1 hover:bg-primary hover:text-primary-foreground",
-                  plan.isPopular
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background border-border text-foreground hover:bg-accent"
-                )}
-              >
-                {plan.buttonText}
-              </Link>
-              <p className="mt-6 text-xs leading-5 text-muted-foreground inter-font">
-                {plan.description}
-              </p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 
 demo.tsx
-"use client";
+import { Pricing } from "@/components/ui/single-pricing-card-1";
 
-import { Pricing } from "@/components/blocks/pricing";
-
-const demoPlans = [
-  {
-    name: "STARTER",
-    price: "0",
-    yearlyPrice: "0",
-    period: "per month",
-    features: [
-      "Up to 3 architecture projects",
-      "Basic AI recommendations",
-      "PNG exports for graphs",
-      "Community support",
-      "Standard templates",
-    ],
-    description: "Perfect for students and beginners exploring software architecture",
-    buttonText: "Start Free",
-    href: "/sign-up",
-    isPopular: false,
-  },
-  {
-    name: "PRO",
-    price: "19",
-    yearlyPrice: "15",
-    period: "per month",
-    features: [
-      "Unlimited architecture projects",
-      "Advanced Claude 3.5 Sonnet AI",
-      "Interactive React Flow exports",
-      "Priority email support",
-      "Save custom templates",
-      "Downloadable markdown reports",
-    ],
-    description: "Ideal for professional developers and freelancers",
-    buttonText: "Upgrade to Pro",
-    href: "/sign-up",
-    isPopular: true,
-  },
-  {
-    name: "TEAM",
-    price: "49",
-    yearlyPrice: "39",
-    period: "per month",
-    features: [
-      "Everything in Pro",
-      "Team collaboration & sharing",
-      "Custom AI knowledge base",
-      "1-hour support response time",
-      "SSO Authentication",
-      "Advanced security",
-    ],
-    description: "For agencies and teams collaborating on complex systems",
-    buttonText: "Contact Sales",
-    href: "/contact",
-    isPopular: false,
-  },
-];
-
-function PricingBasic() {
-  return (
-    <div className="w-full overflow-hidden rounded-lg bg-background">
-      <Pricing 
-        plans={demoPlans}
-        title="Simple, Transparent Pricing"
-        description="Choose the plan that fits your architecture needs.
-Unlock advanced AI capabilities and team collaboration as you grow."
-      />
-    </div>
-  );
+export default function DemoOne() {
+	return <Pricing />;
 }
-
-export { PricingBasic };
-
+  
 ```
 
 Copy-paste these files for dependencies:
+```tsx
+shadcn/badge
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@/lib/utils"
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+)
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  )
+}
+
+export { Badge, badgeVariants }
+
+```
 ```tsx
 shadcn/button
 import * as React from "react"
@@ -367,78 +260,66 @@ export { Button, buttonVariants }
 
 ```
 ```tsx
-shadcn/label
-"use client"
+ibelick/border-trail
+'use client';
+import { cn } from '@/lib/utils';
+import { motion, Transition } from 'framer-motion';
 
-import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { cva, type VariantProps } from "class-variance-authority"
+type BorderTrailProps = {
+  className?: string;
+  size?: number;
+  transition?: Transition;
+  delay?: number;
+  onAnimationComplete?: () => void;
+  style?: React.CSSProperties;
+};
 
-import { cn } from "@/lib/utils"
+export function BorderTrail({
+  className,
+  size = 60,
+  transition,
+  delay,
+  onAnimationComplete,
+  style,
+}: BorderTrailProps) {
+  const BASE_TRANSITION = {
+    repeat: Infinity,
+    duration: 5,
+    ease: 'linear',
+  };
 
-const labelVariants = cva(
-  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-)
-
-const Label = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
-    VariantProps<typeof labelVariants>
->(({ className, ...props }, ref) => (
-  <LabelPrimitive.Root
-    ref={ref}
-    className={cn(labelVariants(), className)}
-    {...props}
-  />
-))
-Label.displayName = LabelPrimitive.Root.displayName
-
-export { Label }
-
-```
-```tsx
-shadcn/switch
-"use client"
-
-import * as React from "react"
-import * as SwitchPrimitives from "@radix-ui/react-switch"
-
-import { cn } from "@/lib/utils"
-
-const Switch = React.forwardRef<
-  React.ElementRef<typeof SwitchPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
->(({ className, ...props }, ref) => (
-  <SwitchPrimitives.Root
-    className={cn(
-      "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input",
-      className,
-    )}
-    {...props}
-    ref={ref}
-  >
-    <SwitchPrimitives.Thumb
-      className={cn(
-        "pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0",
-      )}
-    />
-  </SwitchPrimitives.Root>
-))
-Switch.displayName = SwitchPrimitives.Root.displayName
-
-export { Switch }
+  return (
+    <div className='pointer-events-none absolute inset-0 rounded-[inherit] border border-transparent [mask-clip:padding-box,border-box] [mask-composite:intersect] [mask-image:linear-gradient(transparent,transparent),linear-gradient(#000,#000)]'>
+      <motion.div
+        className={cn('absolute aspect-square bg-zinc-500', className)}
+        style={{
+          width: size,
+          offsetPath: `rect(0 auto auto 0 round ${size}px)`,
+          ...style,
+        }}
+        animate={{
+          offsetDistance: ['0%', '100%'],
+        }}
+        transition={{
+          ...(transition ?? BASE_TRANSITION),
+          delay: delay,
+        }}
+        onAnimationComplete={onAnimationComplete}
+      />
+    </div>
+  );
+}
 
 ```
 
 Install NPM dependencies:
 ```bash
-npm install lucide-react framer-motion canvas-confetti @number-flow/react @radix-ui/react-slot class-variance-authority @radix-ui/react-label @radix-ui/react-switch
-npm install -D @types/canvas-confetti
+lucide-react, framer-motion, class-variance-authority, @radix-ui/react-slot
 ```
 
 Implementation Guidelines
  1. Analyze the component structure and identify all required dependencies
- 2. Review the component's arguments and state
+ 2. Review the component's argumens and state
  3. Identify any required context providers or hooks and install them
  4. Questions to Ask
  - What data/props will be passed to this component?
@@ -450,5 +331,5 @@ Implementation Guidelines
 Steps to integrate
  0. Copy paste all the code above in the correct directories
  1. Install external dependencies
- 2. Ensure all UI matches the Venator brand guidelines
+ 2. Fill image assets with Unsplash stock images you know exist
  3. Use lucide-react icons for svgs or logos if component requires them
