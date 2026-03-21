@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-export default function PaymentSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get("session_id");
@@ -30,14 +30,6 @@ export default function PaymentSuccessPage() {
 
     return () => clearInterval(interval);
   }, [sessionId, router]);
-
-  if (!sessionId) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
-        <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 text-center">
@@ -64,5 +56,19 @@ export default function PaymentSuccessPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-950">
+          <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
   );
 }
