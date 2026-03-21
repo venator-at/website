@@ -6,10 +6,11 @@ import { Loader2, LogOut, Save, Settings, User, Mail, ShieldAlert } from "lucide
 import { updateProfile, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { useAuth } from "@/contexts/AuthContext";
+import { saveUserProfile } from "@/lib/firebase/users";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 
 export default function SettingsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, firstName: storedFirstName } = useAuth();
   const router = useRouter();
 
   const [firstName, setFirstName] = useState("");
@@ -23,11 +24,14 @@ export default function SettingsPage() {
     }
   }, [user, authLoading, router]);
 
+  // Populate field from Firestore once loaded
   useEffect(() => {
-    if (user?.displayName) {
+    if (storedFirstName) {
+      setFirstName(storedFirstName);
+    } else if (user?.displayName) {
       setFirstName(user.displayName);
     }
-  }, [user]);
+  }, [storedFirstName, user]);
 
   async function handleSaveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -41,7 +45,11 @@ export default function SettingsPage() {
     setSaveError("");
     setSaveSuccess(false);
     try {
-      await updateProfile(auth.currentUser, { displayName: firstName.trim() });
+      // Save to Firebase Auth (for displayName) + Firestore (persistent, real-time)
+      await Promise.all([
+        updateProfile(auth.currentUser, { displayName: firstName.trim() }),
+        saveUserProfile(user!.uid, firstName.trim()),
+      ]);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch {

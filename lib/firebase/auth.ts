@@ -9,6 +9,7 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "./config";
+import { saveUserProfile } from "./users";
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -25,6 +26,8 @@ export async function signUpWithEmail(email: string, password: string, firstName
   const credential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
   if (firstName.trim()) {
     await updateProfile(credential.user, { displayName: firstName.trim() });
+    // Also persist to Firestore so it's queryable and reflected in real-time
+    await saveUserProfile(credential.user.uid, firstName.trim());
   }
   return credential;
 }

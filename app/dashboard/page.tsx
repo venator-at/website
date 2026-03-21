@@ -135,7 +135,7 @@ function Sidebar({
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, firstName } = useAuth();
   const router = useRouter();
   const firebaseConfigured = [
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -446,7 +446,7 @@ export default function DashboardPage() {
     setDetailsOpen(true);
   }, []);
 
-  const displayName = user?.displayName?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "there";
+  const displayName = firstName || user?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "there";
   const isBusy = uiState === "submitting" || uiState === "loading";
   const showGraphContainer = uiState === "graph-ready";
 

@@ -3,13 +3,14 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { type User } from "firebase/auth";
 import { onAuthChange } from "@/lib/firebase/auth";
-import { subscribeToCredits } from "@/lib/firebase/credits";
+import { subscribeToUserProfile } from "@/lib/firebase/users";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   credits: number;
   creditsLoading: boolean;
+  firstName: string;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextValue>({
   loading: true,
   credits: 0,
   creditsLoading: true,
+  firstName: "",
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState(0);
   const [creditsLoading, setCreditsLoading] = useState(true);
+  const [firstName, setFirstName] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthChange((u) => {
@@ -36,13 +39,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) {
       setCredits(0);
+      setFirstName("");
       setCreditsLoading(false);
       return;
     }
 
     setCreditsLoading(true);
-    const unsubscribe = subscribeToCredits(user.uid, (c) => {
-      setCredits(c);
+    const unsubscribe = subscribeToUserProfile(user.uid, (profile) => {
+      setCredits(profile.credits);
+      setFirstName(profile.firstName);
       setCreditsLoading(false);
     });
 
@@ -50,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, credits, creditsLoading }}>
+    <AuthContext.Provider value={{ user, loading, credits, creditsLoading, firstName }}>
       {children}
     </AuthContext.Provider>
   );
