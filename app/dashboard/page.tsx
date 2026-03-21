@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ExternalLink, LayoutDashboard, Loader2, Search, X } from "lucide-react";
+import { LayoutDashboard, Loader2, Search, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { subscribeToProjects } from "@/lib/firebase/projects";
 import type { Project } from "@/types/project";
@@ -93,13 +93,10 @@ function Sidebar({
               <a
                 key={project.id}
                 href={`/project/${project.id}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mb-1 flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200 group"
+                className="mb-1 flex w-full items-start gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200"
               >
                 <LayoutDashboard className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
-                <span className="line-clamp-2 flex-1 leading-snug">{project.title}</span>
-                <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="line-clamp-2 leading-snug">{project.title}</span>
               </a>
             ))
           )}
@@ -142,13 +139,11 @@ export default function DashboardPage() {
     return unsub;
   }, [user, firebaseConfigured]);
 
-  // Open new project page in a new tab
   const handleSubmit = useCallback(() => {
     const idea = prompt.trim();
     if (!idea) return;
-    window.open(`/new?q=${encodeURIComponent(idea)}`, "_blank");
-    setPrompt("");
-  }, [prompt]);
+    router.push(`/new?q=${encodeURIComponent(idea)}`);
+  }, [prompt, router]);
 
   const displayName = firstName || user?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "there";
 
