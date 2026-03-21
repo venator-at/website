@@ -33,6 +33,7 @@ import type {
 } from "@/types/architecture";
 import { VercelV0Chat } from "@/components/ui/v0-ai-chat";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
+import { ElegantShape } from "@/components/ui/shape-landing-hero";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -755,8 +756,49 @@ export default function DashboardPage() {
         <DashboardHeader />
 
         {/* Hero — Start-First */}
-        <section className="mx-auto w-full max-w-6xl px-4 py-12 lg:py-16">
-          <div className="mx-auto w-full max-w-3xl">
+        <section className="relative mx-auto w-full max-w-6xl overflow-hidden px-4 py-12 lg:py-16">
+          {/* Animated background shapes */}
+          <ElegantShape
+            delay={0.3}
+            width={500}
+            height={120}
+            rotate={12}
+            gradient="from-cyan-500/[0.12]"
+            className="left-[-8%] top-[10%] pointer-events-none"
+          />
+          <ElegantShape
+            delay={0.5}
+            width={400}
+            height={100}
+            rotate={-15}
+            gradient="from-fuchsia-500/[0.12]"
+            className="right-[-5%] bottom-[15%] pointer-events-none"
+          />
+          <ElegantShape
+            delay={0.4}
+            width={250}
+            height={70}
+            rotate={-8}
+            gradient="from-indigo-500/[0.12]"
+            className="left-[5%] bottom-[5%] pointer-events-none"
+          />
+          <ElegantShape
+            delay={0.6}
+            width={180}
+            height={50}
+            rotate={20}
+            gradient="from-violet-500/[0.12]"
+            className="right-[18%] top-[5%] pointer-events-none"
+          />
+          <ElegantShape
+            delay={0.7}
+            width={130}
+            height={38}
+            rotate={-25}
+            gradient="from-sky-500/[0.12]"
+            className="left-[22%] top-[2%] pointer-events-none"
+          />
+          <div className="relative z-10 mx-auto w-full max-w-3xl">
             <VercelV0Chat
               value={prompt}
               onChange={setPrompt}
@@ -793,7 +835,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="mt-8 h-[760px] w-full">
+          <div className="relative z-10 mt-8 h-[760px] w-full">
             <GraphCanvas
               nodes={graphNodes}
               edges={graphEdges}
