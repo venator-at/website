@@ -44,6 +44,11 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [prompt, setPrompt] = useState("");
 
+  // Project context
+  const [projectType, setProjectType] = useState("web-app");
+  const [experienceLevel, setExperienceLevel] = useState("beginner");
+  const [budgetLevel, setBudgetLevel] = useState("free");
+
   // Graph state
   const [pageState, setPageState] = useState<PageState>("idle");
   const [graphNodes, setGraphNodes] = useState<ArchitectureNode[]>([]);
@@ -117,7 +122,7 @@ export default function DashboardPage() {
       const response = await fetch("/api/ai/generate-json", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}) },
-        body: JSON.stringify({ idea }),
+        body: JSON.stringify({ idea, projectType, experienceLevel, budgetLevel }),
       });
 
       const data = (await response.json()) as { jsonText?: string; error?: string };
@@ -167,7 +172,7 @@ export default function DashboardPage() {
       setPageState("idle");
       setGenerateError("Die Anfrage ist fehlgeschlagen. Bitte erneut versuchen.");
     }
-  }, [prompt, user, firebaseConfigured, normalizeAiArchitecture]);
+  }, [prompt, projectType, experienceLevel, budgetLevel, user, firebaseConfigured, normalizeAiArchitecture]);
 
   const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
     setSelectedComponent(component);
@@ -257,6 +262,55 @@ export default function DashboardPage() {
                 submitting={pageState === "submitting"}
                 displayName={displayName}
               />
+
+              {/* Project context selects */}
+              <div className="flex w-full gap-3">
+                <div className="flex flex-1 flex-col gap-1">
+                  <label className="text-[11px] font-medium text-slate-500">Projekttyp</label>
+                  <select
+                    value={projectType}
+                    onChange={(e) => setProjectType(e.target.value)}
+                    disabled={pageState === "submitting"}
+                    className="w-full rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-xs text-slate-300 outline-none transition-colors focus:border-cyan-400/40 disabled:opacity-40"
+                  >
+                    <option value="web-app">Web App</option>
+                    <option value="mobile">Mobile App</option>
+                    <option value="api">API / Backend</option>
+                    <option value="saas">SaaS Produkt</option>
+                    <option value="ecommerce">E-Commerce</option>
+                    <option value="other">Sonstiges</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-1">
+                  <label className="text-[11px] font-medium text-slate-500">Erfahrungslevel</label>
+                  <select
+                    value={experienceLevel}
+                    onChange={(e) => setExperienceLevel(e.target.value)}
+                    disabled={pageState === "submitting"}
+                    className="w-full rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-xs text-slate-300 outline-none transition-colors focus:border-cyan-400/40 disabled:opacity-40"
+                  >
+                    <option value="beginner">Anfänger</option>
+                    <option value="junior">Junior</option>
+                    <option value="mid">Mid-Level</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-1">
+                  <label className="text-[11px] font-medium text-slate-500">Budget</label>
+                  <select
+                    value={budgetLevel}
+                    onChange={(e) => setBudgetLevel(e.target.value)}
+                    disabled={pageState === "submitting"}
+                    className="w-full rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-xs text-slate-300 outline-none transition-colors focus:border-cyan-400/40 disabled:opacity-40"
+                  >
+                    <option value="free">Kostenlos</option>
+                    <option value="low">Niedrig (&lt; 20 € / Mo.)</option>
+                    <option value="medium">Mittel (20–100 € / Mo.)</option>
+                    <option value="high">Hoch (&gt; 100 € / Mo.)</option>
+                  </select>
+                </div>
+              </div>
 
               {/* Loading indicator */}
               {pageState === "submitting" && (

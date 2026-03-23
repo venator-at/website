@@ -6,6 +6,9 @@ import { FREE_CREDITS, CREDITS_PER_GENERATION } from "@/lib/firebase/credits";
 
 interface GenerateJsonRequest {
   idea?: string;
+  projectType?: string;
+  experienceLevel?: string;
+  budgetLevel?: string;
 }
 
 function extractJsonFromModelText(text: string): string {
@@ -112,6 +115,9 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as GenerateJsonRequest;
     const idea = body.idea?.trim();
+    const projectType = body.projectType?.trim();
+    const experienceLevel = body.experienceLevel?.trim();
+    const budgetLevel = body.budgetLevel?.trim();
 
     console.log("[AI ROUTE] Request received", {
       requestId,
@@ -160,7 +166,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const prompt = buildArchitectureGeneratorPrompt(idea);
+    const prompt = buildArchitectureGeneratorPrompt(idea, { projectType, experienceLevel, budgetLevel });
     console.log("[AI PROMPT START]");
     console.log(prompt);
     console.log("[AI PROMPT END]");
