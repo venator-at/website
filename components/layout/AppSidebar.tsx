@@ -31,11 +31,13 @@ export function AppSidebar({
   chats,
   searchQuery,
   onSearchChange,
+  onChatSelect,
 }: {
   projects: Project[]
   chats: ChatConversation[]
   searchQuery: string
   onSearchChange: (q: string) => void
+  onChatSelect: (chat: ChatConversation) => void
 }) {
   const { user, firstName } = useAuth()
   const displayName =
@@ -138,7 +140,8 @@ export function AppSidebar({
                   <SidebarMenuItem key={chat.id}>
                     <SidebarMenuButton
                       tooltip={chat.title}
-                      className="rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 cursor-default"
+                      onClick={() => onChatSelect(chat)}
+                      className="rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 cursor-pointer"
                     >
                       <MessageSquare className="h-3.5 w-3.5 shrink-0 text-fuchsia-500/70" />
                       <span className="line-clamp-1 text-xs leading-snug">{chat.title}</span>

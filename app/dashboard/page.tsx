@@ -280,6 +280,16 @@ export default function DashboardPage() {
     setDetailsOpen(true);
   }, []);
 
+  const handleChatSelect = useCallback((chat: ChatConversation) => {
+    setChatMode("chat");
+    setChatHistory(chat.messages);
+    setCurrentChatId(chat.id);
+    setChatError("");
+    setPageState("idle");
+    setGenerateError("");
+    setModalOpen(false);
+  }, []);
+
   // When switching to planning mode, reset chat state; when switching to chat, reset graph state
   const handleModeChange = useCallback((mode: ChatMode) => {
     setChatMode(mode);
@@ -325,6 +335,7 @@ export default function DashboardPage() {
         chats={chats}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onChatSelect={handleChatSelect}
       />
 
       <SidebarInset className="bg-slate-950 text-slate-100">
