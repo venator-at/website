@@ -14,7 +14,7 @@ export function buildArchitectureGeneratorPrompt(userIdea: string, context?: Pro
   if (context?.budgetLevel) contextLines.push(`Budget range: ${context.budgetLevel}`);
 
   return [
-    "You are a senior software architect for beginners.",
+    "You are a senior software architect explaining technology decisions to complete beginners.",
     "Return ONLY valid JSON. No markdown. No explanation. No code fences.",
     "Use realistic technologies and clear naming.",
     "Tailor your recommendations to the project context provided.",
