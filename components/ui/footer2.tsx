@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Zap } from "lucide-react";
+
 
 interface MenuItem {
   title: string;

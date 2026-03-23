@@ -92,13 +92,13 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
               components={{
-                blockquote: ({ node, ...props }) => (
+                blockquote: ({ node: _, ...props }) => (
                   <blockquote className="border-l-4 border-cyan-500 bg-cyan-500/10 px-4 py-3 rounded-r-lg not-italic text-sm text-cyan-100" {...props} />
                 ),
-                h2: ({ node, ...props }) => (
+                h2: ({ node: _, ...props }) => (
                   <h2 className="text-2xl font-semibold mt-10 mb-4 pb-2 border-b border-white/10 text-slate-100" {...props} />
                 ),
-                h3: ({ node, ...props }) => (
+                h3: ({ node: _, ...props }) => (
                   <h3 className="text-xl font-medium mt-8 mb-3 text-slate-100" {...props} />
                 ),
               }}
