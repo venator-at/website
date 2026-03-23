@@ -7,7 +7,10 @@ import type {
   ComponentCategory,
   ComponentDifficulty,
   ComponentPricing,
+  CostEstimation,
+  LearningResource,
   ParseArchitectureResult,
+  RoadmapStep,
 } from "@/types/architecture";
 
 const VALID_CATEGORIES = new Set<ComponentCategory>([
@@ -359,6 +362,50 @@ export function parseArchitectureJson(raw: string): ParseArchitectureResult {
     };
   }
 
+  // Extract optional extended fields leniently
+  let costEstimation: CostEstimation | undefined;
+  if (isRecord(parsed.costEstimation)) {
+    const monthlyCost = readString(parsed.costEstimation.monthlyCost);
+    const description = readString(parsed.costEstimation.description);
+    if (monthlyCost && description) costEstimation = { monthlyCost, description };
+  }
+
+  let roadmap: RoadmapStep[] | undefined;
+  if (Array.isArray(parsed.roadmap)) {
+    roadmap = parsed.roadmap
+      .filter(isRecord)
+      .map((step) => ({
+        title: readString(step.title),
+        description: readString(step.description),
+      }))
+      .filter((step) => step.title && step.description);
+  }
+
+  let learningResources: LearningResource[] | undefined;
+  if (Array.isArray(parsed.learningResources)) {
+    learningResources = parsed.learningResources
+      .filter(isRecord)
+      .map((res) => ({
+        title: readString(res.title),
+        description: readString(res.description),
+      }))
+      .filter((res) => res.title && res.description);
+  }
+
+  let setupCommands: string[] | undefined;
+  if (Array.isArray(parsed.setupCommands)) {
+    setupCommands = parsed.setupCommands
+      .filter((cmd): cmd is string => typeof cmd === "string" && cmd.trim().length > 0)
+      .map((cmd) => cmd.trim());
+  }
+
+  let goLiveChecklist: string[] | undefined;
+  if (Array.isArray(parsed.goLiveChecklist)) {
+    goLiveChecklist = parsed.goLiveChecklist
+      .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+      .map((item) => item.trim());
+  }
+
   return {
     ok: true,
     data: {
@@ -368,6 +415,11 @@ export function parseArchitectureJson(raw: string): ParseArchitectureResult {
         to: connection.to,
         type: connection.type,
       })),
+      ...(costEstimation && { costEstimation }),
+      ...(roadmap && { roadmap }),
+      ...(learningResources && { learningResources }),
+      ...(setupCommands && { setupCommands }),
+      ...(goLiveChecklist && { goLiveChecklist }),
     },
   };
 }

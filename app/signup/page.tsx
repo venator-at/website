@@ -187,13 +187,6 @@ export default function SignupPage() {
       <span className="relative flex flex-col justify-center w-1/2 max-lg:hidden overflow-hidden">
         <Ripple mainCircleSize={120} />
         <TechOrbitDisplay iconsArray={orbitIcons} text="Venator" />
-        <Link
-          href="/"
-          className="absolute top-6 left-6 inline-flex items-center gap-2 z-10"
-        >
-          <Image src="/logo.png" alt="Venator" width={32} height={32} className="rounded-lg" />
-          <span className="text-lg font-bold text-slate-100">Venator</span>
-        </Link>
       </span>
 
       {/* Right Side — form */}

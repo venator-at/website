@@ -42,9 +42,29 @@ export interface ArchitectureConnectionInput {
   type: string;
 }
 
+export interface CostEstimation {
+  monthlyCost: string;
+  description: string;
+}
+
+export interface RoadmapStep {
+  title: string;
+  description: string;
+}
+
+export interface LearningResource {
+  title: string;
+  description: string;
+}
+
 export interface ArchitectureInput {
   components: ArchitectureComponentInput[];
   connections: ArchitectureConnectionInput[];
+  costEstimation?: CostEstimation;
+  roadmap?: RoadmapStep[];
+  learningResources?: LearningResource[];
+  setupCommands?: string[];
+  goLiveChecklist?: string[];
 }
 
 export interface ArchitectureNodeData {

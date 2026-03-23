@@ -16,8 +16,7 @@ import {
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { getProject } from "@/lib/firebase/projects";
-import { GraphCanvas } from "@/components/graph/graph-canvas";
-import { ComponentDetailsSheet } from "@/components/panels/component-details-sheet";
+import { ProjectDashboard } from "@/components/project/ProjectDashboard";
 import { parseArchitectureJson, transformArchitectureToGraph } from "@/lib/graph/transform";
 import { layoutGraph } from "@/lib/graph/layout";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
@@ -101,7 +100,47 @@ function normalizeAiArchitecture(jsonText: string): ArchitectureInput | null {
         .slice(0, -1)
         .map((c, i) => ({ from: c.name, to: components[i + 1].name, type: "data flow" }));
     }
-    return { components, connections };
+
+    // Extract optional extended fields
+    const costEstimation =
+      typeof parsed.costEstimation === "object" && parsed.costEstimation !== null
+        ? {
+            monthlyCost: String((parsed.costEstimation as Record<string, unknown>).monthlyCost ?? ""),
+            description: String((parsed.costEstimation as Record<string, unknown>).description ?? ""),
+          }
+        : undefined;
+
+    const roadmap = Array.isArray(parsed.roadmap)
+      ? parsed.roadmap
+          .filter((s): s is Record<string, unknown> => typeof s === "object" && s !== null)
+          .map((s) => ({ title: String(s.title ?? ""), description: String(s.description ?? "") }))
+          .filter((s) => s.title && s.description)
+      : undefined;
+
+    const learningResources = Array.isArray(parsed.learningResources)
+      ? parsed.learningResources
+          .filter((r): r is Record<string, unknown> => typeof r === "object" && r !== null)
+          .map((r) => ({ title: String(r.title ?? ""), description: String(r.description ?? "") }))
+          .filter((r) => r.title && r.description)
+      : undefined;
+
+    const setupCommands = Array.isArray(parsed.setupCommands)
+      ? parsed.setupCommands.filter((cmd): cmd is string => typeof cmd === "string" && cmd.trim().length > 0)
+      : undefined;
+
+    const goLiveChecklist = Array.isArray(parsed.goLiveChecklist)
+      ? parsed.goLiveChecklist.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+      : undefined;
+
+    return {
+      components,
+      connections,
+      ...(costEstimation?.monthlyCost && { costEstimation }),
+      ...(roadmap?.length && { roadmap }),
+      ...(learningResources?.length && { learningResources }),
+      ...(setupCommands?.length && { setupCommands }),
+      ...(goLiveChecklist?.length && { goLiveChecklist }),
+    };
   } catch {
     return null;
   }
@@ -117,9 +156,8 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
   const [loadError, setLoadError] = useState("");
   const [graphNodes, setGraphNodes] = useState<ArchitectureNode[]>([]);
   const [graphEdges, setGraphEdges] = useState<ArchitectureEdge[]>([]);
-  const [graphContainerOpen, setGraphContainerOpen] = useState(false);
-  const [selectedComponent, setSelectedComponent] = useState<ArchitectureComponentInput | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [architectureInput, setArchitectureInput] = useState<ArchitectureInput | null>(null);
+  const [dashboardReady, setDashboardReady] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [infoExpanded, setInfoExpanded] = useState(false);
 
@@ -159,29 +197,25 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
         // Try strict parser first, fall back to lenient normalizer
         const strictResult = parseArchitectureJson(p.architectureJson);
-        const architectureInput = strictResult.ok
+        const archInput = strictResult.ok
           ? strictResult.data
           : normalizeAiArchitecture(p.architectureJson);
 
-        if (!architectureInput) {
+        if (!archInput) {
           setLoadError("Architektur konnte nicht geladen werden.");
           return;
         }
 
-        const transformed = transformArchitectureToGraph(architectureInput, 1);
+        const transformed = transformArchitectureToGraph(archInput, 1);
         const layouted = layoutGraph(transformed.nodes, transformed.edges, "LR");
         setGraphNodes(layouted.nodes);
         setGraphEdges(layouted.edges);
+        setArchitectureInput(archInput);
 
-        window.setTimeout(() => setGraphContainerOpen(true), 40);
+        window.setTimeout(() => setDashboardReady(true), 40);
       })
       .catch(() => setLoadError("Projekt konnte nicht geladen werden."));
   }, [authLoading, user, projectId, loaded]);
-
-  const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
-    setSelectedComponent(component);
-    setDetailsOpen(true);
-  }, []);
 
   // ── Loading screen ──────────────────────────────────────────────────────────
   if (authLoading || (!loaded && !loadError)) {
@@ -224,7 +258,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
   // ── Main view ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-slate-950 text-slate-100">
+    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -left-40 top-0 h-[500px] w-[500px] rounded-full bg-cyan-500/8 blur-[120px]" />
@@ -233,9 +267,9 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
       <DashboardHeader />
 
-      <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 pt-3">
+      <main className="flex flex-col px-4 pb-8 pt-3">
         {/* ── Top bar ──────────────────────────────────────────────────────── */}
-        <div className="mb-3 flex items-start justify-between gap-4">
+        <div className="mb-4 flex items-start justify-between gap-4">
           {/* Left: back + title */}
           <div className="flex min-w-0 flex-col gap-0.5">
             <Link
@@ -300,7 +334,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
         {/* ── Info panel (collapsible) ──────────────────────────────────────── */}
         {project && infoExpanded && (
-          <div className="mb-3 overflow-hidden rounded-2xl border border-white/8 bg-slate-900/60 backdrop-blur-sm">
+          <div className="mb-4 overflow-hidden rounded-2xl border border-white/8 bg-slate-900/60 backdrop-blur-sm">
             <div className="grid grid-cols-1 gap-0 divide-y divide-white/6 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
               {/* Prompt */}
               <div className="px-4 py-3">
@@ -308,7 +342,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
                   <FileText className="h-3 w-3" />
                   Projektbeschreibung
                 </p>
-                <p className="text-sm leading-relaxed text-slate-300 line-clamp-4">{project.prompt}</p>
+                <p className="line-clamp-4 text-sm leading-relaxed text-slate-300">{project.prompt}</p>
               </div>
 
               {/* Tech stack */}
@@ -335,45 +369,39 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
           </div>
         )}
 
-        {/* ── Graph area ───────────────────────────────────────────────────── */}
-        {loadError && project ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-4">
-            <div className="flex items-center gap-3 rounded-2xl border border-red-400/25 bg-red-500/10 px-6 py-4 text-red-200">
-              <AlertTriangle className="h-5 w-5 shrink-0 text-red-400" />
-              <span className="text-sm">{loadError}</span>
-            </div>
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1.5 text-sm text-slate-500 transition-colors hover:text-slate-300"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Zurück zum Dashboard
-            </Link>
-          </div>
-        ) : (
-          <div
-            className={cn(
-              "min-h-0 flex-1 flex flex-col overflow-hidden rounded-2xl transition-all duration-700 ease-out",
-              graphContainerOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3",
-            )}
-          >
-            {graphContainerOpen && graphNodes.length > 0 ? (
-              <GraphCanvas nodes={graphNodes} edges={graphEdges} onNodeSelect={handleNodeSelect} />
-            ) : (
-              <div className="flex h-full items-center justify-center rounded-2xl border border-cyan-400/20 bg-slate-900/60 text-sm text-slate-400">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin text-cyan-400" />
-                Graph wird geladen…
-              </div>
-            )}
+        {/* ── Error (with project) ──────────────────────────────────────────── */}
+        {loadError && project && (
+          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-red-400/25 bg-red-500/10 px-6 py-4 text-red-200">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-red-400" />
+            <span className="text-sm">{loadError}</span>
           </div>
         )}
-      </main>
 
-      <ComponentDetailsSheet
-        component={selectedComponent}
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
-      />
+        {/* ── Bento Dashboard ───────────────────────────────────────────────── */}
+        {dashboardReady && architectureInput ? (
+          <div
+            className={cn(
+              "transition-all duration-700 ease-out",
+              dashboardReady ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
+            )}
+          >
+            <ProjectDashboard
+              nodes={graphNodes}
+              edges={graphEdges}
+              architecture={architectureInput}
+            />
+          </div>
+        ) : (
+          !loadError && (
+            <div className="flex h-64 items-center justify-center rounded-2xl border border-cyan-400/20 bg-slate-900/60">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+                <p className="text-sm text-slate-500">Dashboard wird geladen…</p>
+              </div>
+            </div>
+          )
+        )}
+      </main>
     </div>
   );
 }

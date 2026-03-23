@@ -19,6 +19,28 @@ Output must be a single JSON object with this exact shape:
       "to": "string (must match an existing component name)",
       "type": "string"
     }
+  ],
+  "costEstimation": {
+    "monthlyCost": "string (e.g. '$0 - $20')",
+    "description": "string (Concise explanation of the costs)"
+  },
+  "roadmap": [
+    {
+      "title": "string (e.g. '1. Setup Database')",
+      "description": "string (Short action-oriented description of what to do)"
+    }
+  ],
+  "learningResources": [
+    {
+      "title": "string (What to learn)",
+      "description": "string (Why it's important for this stack)"
+    }
+  ],
+  "setupCommands": [
+    "string (e.g. 'npx create-next-app@latest my-app')"
+  ],
+  "goLiveChecklist": [
+    "string (e.g. 'Set up Supabase RLS policies')"
   ]
 }
 
