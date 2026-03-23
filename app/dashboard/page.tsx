@@ -7,7 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/lib/firebase/config";
 import { getIdToken } from "firebase/auth";
 import { subscribeToProjects, createProject } from "@/lib/firebase/projects";
+import { subscribeToChats, createChatConversation, updateChatConversation } from "@/lib/firebase/chats";
 import type { Project } from "@/types/project";
+import type { ChatConversation, ChatMessage } from "@/types/chat";
 import type { ArchitectureComponentInput, ArchitectureEdge, ArchitectureNode } from "@/types/architecture";
 import { VercelV0Chat, type ChatMode } from "@/components/ui/v0-ai-chat";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
@@ -19,13 +21,10 @@ import { ComponentDetailsSheet } from "@/components/panels/component-details-she
 import { parseArchitectureJson, transformArchitectureToGraph } from "@/lib/graph/transform";
 import { layoutGraph } from "@/lib/graph/layout";
 import { cn } from "@/lib/utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type PageState = "idle" | "submitting" | "graph-ready";
-
-interface ChatMessage {
-  role: "user" | "ai";
-  text: string;
-}
 
 function generateTitle(prompt: string): string {
   const trimmed = prompt.trim();
@@ -46,6 +45,8 @@ export default function DashboardPage() {
   ].every((value) => typeof value === "string" && value.trim().length > 0);
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const [chats, setChats] = useState<ChatConversation[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [prompt, setPrompt] = useState("");
 
@@ -80,6 +81,12 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!firebaseConfigured || !user) return;
     const unsub = subscribeToProjects(user.uid, setProjects);
+    return unsub;
+  }, [user, firebaseConfigured]);
+
+  useEffect(() => {
+    if (!firebaseConfigured || !user) return;
+    const unsub = subscribeToChats(user.uid, setChats);
     return unsub;
   }, [user, firebaseConfigured]);
 
@@ -220,7 +227,8 @@ export default function DashboardPage() {
 
     setPrompt("");
     setChatError("");
-    setChatHistory((prev) => [...prev, { role: "user", text: message }]);
+    const updatedHistory: ChatMessage[] = [...chatHistory, { role: "user", text: message }];
+    setChatHistory(updatedHistory);
     setChatSubmitting(true);
 
     try {
@@ -232,15 +240,27 @@ export default function DashboardPage() {
 
       const data = (await response.json()) as { text?: string; error?: string };
 
-      if (!response.ok || !data.text) {
-        setChatHistory((prev) => [
-          ...prev,
-          { role: "ai", text: data.error ?? "Antwort fehlgeschlagen. Bitte erneut versuchen." },
-        ]);
-        return;
-      }
+      const aiText = (!response.ok || !data.text)
+        ? (data.error ?? "Antwort fehlgeschlagen. Bitte erneut versuchen.")
+        : data.text!;
 
-      setChatHistory((prev) => [...prev, { role: "ai", text: data.text! }]);
+      const finalHistory: ChatMessage[] = [...updatedHistory, { role: "ai", text: aiText }];
+      setChatHistory(finalHistory);
+
+      // Persist to Firestore
+      if (firebaseConfigured && user) {
+        if (!currentChatId) {
+          const title = message.length <= 40 ? message : message.slice(0, 37) + "…";
+          const newId = await createChatConversation({
+            userId: user.uid,
+            title,
+            messages: finalHistory,
+          }).catch(() => null);
+          if (newId) setCurrentChatId(newId);
+        } else {
+          void updateChatConversation(currentChatId, finalHistory).catch(() => null);
+        }
+      }
     } catch {
       setChatHistory((prev) => [
         ...prev,
@@ -249,7 +269,7 @@ export default function DashboardPage() {
     } finally {
       setChatSubmitting(false);
     }
-  }, [prompt, chatSubmitting]);
+  }, [prompt, chatSubmitting, chatHistory, currentChatId, user, firebaseConfigured]);
 
   const handleModalKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape") setModalOpen(false);
@@ -266,6 +286,7 @@ export default function DashboardPage() {
     if (mode === "planning") {
       setChatHistory([]);
       setChatError("");
+      setCurrentChatId(null);
     } else {
       setPageState("idle");
       setGenerateError("");
@@ -301,6 +322,7 @@ export default function DashboardPage() {
 
       <AppSidebar
         projects={projects}
+        chats={chats}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
@@ -454,13 +476,42 @@ export default function DashboardPage() {
                   >
                     <div
                       className={cn(
-                        "max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap leading-relaxed",
+                        "max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
                         msg.role === "user"
-                          ? "bg-fuchsia-500/20 text-fuchsia-50 border border-fuchsia-500/25"
+                          ? "bg-fuchsia-500/20 text-fuchsia-50 border border-fuchsia-500/25 whitespace-pre-wrap"
                           : "bg-slate-800/80 text-slate-200 border border-white/8"
                       )}
                     >
-                      {msg.text}
+                      {msg.role === "user" ? (
+                        msg.text
+                      ) : (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            h1: ({ children }) => <h1 className="text-base font-bold text-slate-100 mb-2 mt-3 first:mt-0">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-sm font-semibold text-slate-100 mb-1.5 mt-3 first:mt-0">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-sm font-semibold text-slate-200 mb-1 mt-2 first:mt-0">{children}</h3>,
+                            p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                            ul: ({ children }) => <ul className="mb-2 ml-4 list-disc space-y-0.5">{children}</ul>,
+                            ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal space-y-0.5">{children}</ol>,
+                            li: ({ children }) => <li>{children}</li>,
+                            code: ({ children, className }) => {
+                              const isBlock = className?.includes("language-");
+                              return isBlock ? (
+                                <code className="block rounded-lg bg-slate-900/80 px-3 py-2 text-xs font-mono text-slate-300 my-2 overflow-x-auto">{children}</code>
+                              ) : (
+                                <code className="rounded px-1 py-0.5 bg-slate-900/60 text-xs font-mono text-fuchsia-300">{children}</code>
+                              );
+                            },
+                            pre: ({ children }) => <pre className="my-2">{children}</pre>,
+                            strong: ({ children }) => <strong className="font-semibold text-slate-100">{children}</strong>,
+                            a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-fuchsia-400 underline hover:text-fuchsia-300">{children}</a>,
+                            blockquote: ({ children }) => <blockquote className="border-l-2 border-fuchsia-500/40 pl-3 text-slate-400 my-2">{children}</blockquote>,
+                          }}
+                        >
+                          {msg.text}
+                        </ReactMarkdown>
+                      )}
                     </div>
                   </div>
                 ))}

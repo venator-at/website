@@ -2,11 +2,12 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { BookOpen, Layers, LogOut, Search } from 'lucide-react'
+import { BookOpen, Layers, LogOut, MessageSquare, Search } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
 import type { Project } from '@/types/project'
+import type { ChatConversation } from '@/types/chat'
 import {
   Sidebar,
   SidebarContent,
@@ -27,10 +28,12 @@ async function handleFirebaseSignOut() {
 
 export function AppSidebar({
   projects,
+  chats,
   searchQuery,
   onSearchChange,
 }: {
   projects: Project[]
+  chats: ChatConversation[]
   searchQuery: string
   onSearchChange: (q: string) => void
 }) {
@@ -114,6 +117,31 @@ export function AppSidebar({
                     >
                       <Layers className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                       <span className="line-clamp-1 text-xs leading-snug">{project.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[11px] text-slate-600">Freie Fragen</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {chats.length === 0 ? (
+                <p className="px-4 py-4 text-center text-xs text-slate-600 group-data-[state=collapsed]:hidden">
+                  Noch keine Chats
+                </p>
+              ) : (
+                chats.map((chat) => (
+                  <SidebarMenuItem key={chat.id}>
+                    <SidebarMenuButton
+                      tooltip={chat.title}
+                      className="rounded-lg text-slate-400 hover:bg-white/5 hover:text-slate-200 cursor-default"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 shrink-0 text-fuchsia-500/70" />
+                      <span className="line-clamp-1 text-xs leading-snug">{chat.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))
