@@ -92,7 +92,19 @@ export default function DashboardPage() {
         const alternatives = Array.isArray(obj.alternatives) ? obj.alternatives.filter((v): v is string => typeof v === "string").map((v) => v.trim()).filter(Boolean) : [];
         const risks = Array.isArray(obj.risks) ? obj.risks.filter((v): v is string => typeof v === "string").map((v) => v.trim()).filter(Boolean) : [];
         const reasonRaw = typeof obj.reason === "string" ? obj.reason.trim() : "";
-        return { name: typeof obj.name === "string" ? obj.name.trim() : `Component ${index + 1}`, tech: typeof obj.tech === "string" ? obj.tech.trim() : "Unknown Tech", reason: reasonRaw.length >= 8 ? reasonRaw : "AI recommendation for this component.", alternatives, risks };
+        const VALID_CAT = ["frontend","backend","database","auth","hosting","storage","email","payments","monitoring","queue","realtime","cdn","ai","cms","api","mobile","devops","testing","orm"];
+        const VALID_DIFF = ["beginner","intermediate","advanced"];
+        const VALID_PRICE = ["free","freemium","paid","open-source"];
+        return {
+          name: typeof obj.name === "string" ? obj.name.trim() : `Component ${index + 1}`,
+          tech: typeof obj.tech === "string" ? obj.tech.trim() : "Unknown Tech",
+          reason: reasonRaw.length >= 8 ? reasonRaw : "AI recommendation for this component.",
+          alternatives,
+          risks,
+          category: (VALID_CAT.includes(obj.category as string) ? obj.category : "backend") as import("@/types/architecture").ComponentCategory,
+          difficulty: (VALID_DIFF.includes(obj.difficulty as string) ? obj.difficulty : "intermediate") as import("@/types/architecture").ComponentDifficulty,
+          pricing: (VALID_PRICE.includes(obj.pricing as string) ? obj.pricing : "freemium") as import("@/types/architecture").ComponentPricing,
+        };
       });
       const componentNames = new Set(components.map((c) => c.name));
       let connections = rawConnections.map((c) => { const obj = typeof c === "object" && c !== null ? (c as Record<string, unknown>) : {}; return { from: typeof obj.from === "string" ? obj.from.trim() : "", to: typeof obj.to === "string" ? obj.to.trim() : "", type: typeof obj.type === "string" ? obj.type.trim() : "data flow" }; }).filter((c) => c.from && c.to && c.from !== c.to && componentNames.has(c.from) && componentNames.has(c.to));

@@ -4,12 +4,24 @@ import type {
   ArchitectureEdge,
   ArchitectureInput,
   ArchitectureNode,
+  ComponentCategory,
+  ComponentDifficulty,
+  ComponentPricing,
   ParseArchitectureResult,
 } from "@/types/architecture";
 
+const VALID_CATEGORIES = new Set<ComponentCategory>([
+  "frontend", "backend", "database", "auth", "hosting", "storage",
+  "email", "payments", "monitoring", "queue", "realtime", "cdn",
+  "ai", "cms", "api", "mobile", "devops", "testing", "orm",
+]);
+
+const VALID_DIFFICULTIES = new Set<ComponentDifficulty>(["beginner", "intermediate", "advanced"]);
+const VALID_PRICING = new Set<ComponentPricing>(["free", "freemium", "paid", "open-source"]);
+
 const nodeSize = {
   width: 280,
-  height: 164,
+  height: 190,
 };
 
 type ConnectionValidationResult =
@@ -191,6 +203,31 @@ export function parseArchitectureJson(raw: string): ParseArchitectureResult {
       return risksResult;
     }
 
+    const rawCategory = readString(rawComponent.category);
+    const rawDifficulty = readString(rawComponent.difficulty);
+    const rawPricing = readString(rawComponent.pricing);
+
+    if (!VALID_CATEGORIES.has(rawCategory as ComponentCategory)) {
+      return {
+        ok: false,
+        error: `Component "${name}" has invalid category "${rawCategory}". Must be one of: ${[...VALID_CATEGORIES].join(", ")}`,
+      };
+    }
+
+    if (!VALID_DIFFICULTIES.has(rawDifficulty as ComponentDifficulty)) {
+      return {
+        ok: false,
+        error: `Component "${name}" has invalid difficulty "${rawDifficulty}". Must be: beginner, intermediate, or advanced.`,
+      };
+    }
+
+    if (!VALID_PRICING.has(rawPricing as ComponentPricing)) {
+      return {
+        ok: false,
+        error: `Component "${name}" has invalid pricing "${rawPricing}". Must be: free, freemium, paid, or open-source.`,
+      };
+    }
+
     componentNameByLowercase.set(normalizedName, name);
 
     components.push({
@@ -199,6 +236,9 @@ export function parseArchitectureJson(raw: string): ParseArchitectureResult {
       reason,
       alternatives: alternativesResult.value,
       risks: risksResult.value,
+      category: rawCategory as ComponentCategory,
+      difficulty: rawDifficulty as ComponentDifficulty,
+      pricing: rawPricing as ComponentPricing,
     });
   }
 

@@ -81,12 +81,18 @@ function NewProjectForm() {
       const components = rawC.map((c, i) => {
         const o = (typeof c === "object" && c !== null ? c : {}) as Record<string, unknown>;
         const reason = typeof o.reason === "string" ? o.reason.trim() : "";
+        const VALID_CAT = ["frontend","backend","database","auth","hosting","storage","email","payments","monitoring","queue","realtime","cdn","ai","cms","api","mobile","devops","testing","orm"];
+        const VALID_DIFF = ["beginner","intermediate","advanced"];
+        const VALID_PRICE = ["free","freemium","paid","open-source"];
         return {
           name: typeof o.name === "string" ? o.name.trim() : `Component ${i + 1}`,
           tech: typeof o.tech === "string" ? o.tech.trim() : "Unknown",
           reason: reason.length >= 8 ? reason : "AI recommendation.",
           alternatives: Array.isArray(o.alternatives) ? o.alternatives.filter((v): v is string => typeof v === "string") : [],
           risks: Array.isArray(o.risks) ? o.risks.filter((v): v is string => typeof v === "string") : [],
+          category: (VALID_CAT.includes(o.category as string) ? o.category : "backend") as import("@/types/architecture").ComponentCategory,
+          difficulty: (VALID_DIFF.includes(o.difficulty as string) ? o.difficulty : "intermediate") as import("@/types/architecture").ComponentDifficulty,
+          pricing: (VALID_PRICE.includes(o.pricing as string) ? o.pricing : "freemium") as import("@/types/architecture").ComponentPricing,
         };
       });
       const names = new Set(components.map((c) => c.name));

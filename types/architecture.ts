@@ -1,11 +1,39 @@
 import type { Edge, Node } from "@xyflow/react";
 
+export type ComponentCategory =
+  | "frontend"
+  | "backend"
+  | "database"
+  | "auth"
+  | "hosting"
+  | "storage"
+  | "email"
+  | "payments"
+  | "monitoring"
+  | "queue"
+  | "realtime"
+  | "cdn"
+  | "ai"
+  | "cms"
+  | "api"
+  | "mobile"
+  | "devops"
+  | "testing"
+  | "orm";
+
+export type ComponentDifficulty = "beginner" | "intermediate" | "advanced";
+
+export type ComponentPricing = "free" | "freemium" | "paid" | "open-source";
+
 export interface ArchitectureComponentInput {
   name: string;
   tech: string;
   reason: string;
   alternatives: string[];
   risks: string[];
+  category: ComponentCategory;
+  difficulty: ComponentDifficulty;
+  pricing: ComponentPricing;
 }
 
 export interface ArchitectureConnectionInput {

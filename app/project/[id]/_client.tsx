@@ -66,12 +66,18 @@ function normalizeAiArchitecture(jsonText: string): ArchitectureInput | null {
             .filter(Boolean)
         : [];
       const reasonRaw = typeof obj.reason === "string" ? obj.reason.trim() : "";
+      const VALID_CAT = ["frontend","backend","database","auth","hosting","storage","email","payments","monitoring","queue","realtime","cdn","ai","cms","api","mobile","devops","testing","orm"];
+      const VALID_DIFF = ["beginner","intermediate","advanced"];
+      const VALID_PRICE = ["free","freemium","paid","open-source"];
       return {
         name: typeof obj.name === "string" ? obj.name.trim() : `Component ${index + 1}`,
         tech: typeof obj.tech === "string" ? obj.tech.trim() : "Unknown Tech",
         reason: reasonRaw.length >= 8 ? reasonRaw : "AI recommendation for this component.",
         alternatives,
         risks,
+        category: (VALID_CAT.includes(obj.category as string) ? obj.category : "backend") as import("@/types/architecture").ComponentCategory,
+        difficulty: (VALID_DIFF.includes(obj.difficulty as string) ? obj.difficulty : "intermediate") as import("@/types/architecture").ComponentDifficulty,
+        pricing: (VALID_PRICE.includes(obj.pricing as string) ? obj.pricing : "freemium") as import("@/types/architecture").ComponentPricing,
       };
     });
 

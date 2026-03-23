@@ -7,7 +7,10 @@ Output must be a single JSON object with this exact shape:
       "tech": "string (2-120 chars)",
       "reason": "string (8-220 chars, concise and beginner-friendly)",
       "alternatives": ["string", "string"],
-      "risks": ["string"]
+      "risks": ["string"],
+      "category": "one of: frontend | backend | database | auth | hosting | storage | email | payments | monitoring | queue | realtime | cdn | ai | cms | api | mobile | devops | testing | orm",
+      "difficulty": "one of: beginner | intermediate | advanced",
+      "pricing": "one of: free | freemium | paid | open-source"
     }
   ],
   "connections": [
@@ -141,6 +144,9 @@ FEATURE FLAGS & A/B TESTING
 - "alternatives": 2 realistic alternatives from the allowed list, written as "TechName — one-line trade-off"
   (e.g. "Railway — simpler deploys but less free tier than Vercel").
 - "risks": 1–3 specific, honest risks a beginner might actually run into with this choice.
+- "category": Pick the single best category from: frontend, backend, database, auth, hosting, storage, email, payments, monitoring, queue, realtime, cdn, ai, cms, api, mobile, devops, testing, orm
+- "difficulty": Rate the learning curve for a beginner: beginner (easy, great docs, minimal config), intermediate (some concepts to learn), advanced (steep learning curve or complex setup)
+- "pricing": free (always free), freemium (free tier + paid plans), paid (requires payment), open-source (self-hostable, free if you manage it)
 - max 80 components, no isolated components when more than two exist.
 
 ━━━ CONNECTION RULES ━━━

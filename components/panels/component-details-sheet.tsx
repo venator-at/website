@@ -11,7 +11,36 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import type { ArchitectureComponentInput } from "@/types/architecture";
+import type { ArchitectureComponentInput, ComponentCategory, ComponentDifficulty, ComponentPricing } from "@/types/architecture";
+
+const categoryLabel: Record<ComponentCategory, string> = {
+  frontend: "Frontend", backend: "Backend", database: "Database", auth: "Auth",
+  hosting: "Hosting", storage: "Storage", email: "Email", payments: "Payments",
+  monitoring: "Monitoring", queue: "Queue", realtime: "Realtime", cdn: "CDN",
+  ai: "AI", cms: "CMS", api: "API", mobile: "Mobile", devops: "DevOps",
+  testing: "Testing", orm: "ORM",
+};
+
+const difficultyLabel: Record<ComponentDifficulty, string> = {
+  beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced",
+};
+
+const difficultyColor: Record<ComponentDifficulty, string> = {
+  beginner: "border-emerald-300/35 bg-emerald-400/15 text-emerald-200",
+  intermediate: "border-amber-300/35 bg-amber-400/15 text-amber-200",
+  advanced: "border-rose-300/35 bg-rose-400/15 text-rose-200",
+};
+
+const pricingLabel: Record<ComponentPricing, string> = {
+  free: "Free", freemium: "Freemium", paid: "Paid", "open-source": "Open Source",
+};
+
+const pricingColor: Record<ComponentPricing, string> = {
+  free: "border-emerald-300/35 bg-emerald-400/15 text-emerald-200",
+  freemium: "border-sky-300/35 bg-sky-400/15 text-sky-200",
+  paid: "border-rose-300/35 bg-rose-400/15 text-rose-200",
+  "open-source": "border-slate-400/35 bg-slate-400/15 text-slate-300",
+};
 
 interface ComponentDetailsSheetProps {
   component: ArchitectureComponentInput | null;
@@ -67,6 +96,18 @@ export function ComponentDetailsSheet({
             </div>
           ) : (
             <div className="space-y-6">
+              <div className="flex flex-wrap gap-2">
+                <Badge className="rounded-full border border-cyan-300/35 bg-cyan-400/15 text-cyan-100">
+                  {categoryLabel[component.category]}
+                </Badge>
+                <Badge className={`rounded-full border ${difficultyColor[component.difficulty]}`}>
+                  {difficultyLabel[component.difficulty]}
+                </Badge>
+                <Badge className={`rounded-full border ${pricingColor[component.pricing]}`}>
+                  {pricingLabel[component.pricing]}
+                </Badge>
+              </div>
+
               <section className="space-y-2">
                 <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-100">
                   <Cpu className="h-4 w-4 text-cyan-300" />
