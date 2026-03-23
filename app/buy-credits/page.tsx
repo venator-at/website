@@ -18,7 +18,7 @@ export default function BuyCreditsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState<CreditPackKey | null>(null);
   const [error, setError] = useState("");
-  const [customAmount, setCustomAmount] = useState(5);
+  const [customAmount, setCustomAmount] = useState(1);
   const [customError, setCustomError] = useState("");
 
   async function handleBuy(pack: CreditPackKey, amount?: number) {
@@ -58,8 +58,8 @@ export default function BuyCreditsPage() {
 
   function handleCustomBuy() {
     setCustomError("");
-    if (customAmount < 5 || customAmount > 999999.99) {
-      setCustomError("Betrag muss zwischen 5€ und 999.999,99€ liegen.");
+    if (customAmount < 1 || customAmount > 1000) {
+      setCustomError("Betrag muss zwischen 1€ und 1.000€ liegen.");
       return;
     }
     void handleBuy("custom", customAmount);
@@ -237,7 +237,7 @@ export default function BuyCreditsPage() {
                     <div className="pt-3">
                       <input
                         type="range"
-                        min={5}
+                        min={1}
                         max={1000}
                         step={1}
                         value={Math.min(customAmount, 1000)}
@@ -248,8 +248,8 @@ export default function BuyCreditsPage() {
                         className="w-full accent-cyan-400"
                       />
                       <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
-                        <span>5€</span>
-                        <span>1.000€+</span>
+                        <span>1€</span>
+                        <span>1.000€</span>
                       </div>
                     </div>
 
@@ -257,13 +257,13 @@ export default function BuyCreditsPage() {
                     <div className="flex items-center gap-2 pt-1">
                       <input
                         type="number"
-                        min={5}
-                        max={999999.99}
-                        step={0.01}
+                        min={1}
+                        max={1000}
+                        step={1}
                         value={customAmount}
                         onChange={(e) => {
-                          const val = Math.max(5, Number(e.target.value));
-                          setCustomAmount(Math.round(val * 100) / 100);
+                          const val = Math.max(1, Math.min(1000, Number(e.target.value)));
+                          setCustomAmount(Math.round(val));
                           setCustomError("");
                         }}
                         className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:border-cyan-500/60 focus:outline-none"

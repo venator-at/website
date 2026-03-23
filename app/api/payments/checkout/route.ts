@@ -30,9 +30,9 @@ export async function POST(request: Request) {
     const stripe = getStripe();
 
     if (pack === "custom") {
-      if (!customAmount || customAmount < 5 || customAmount > 999999.99) {
+      if (!customAmount || customAmount < 1 || customAmount > 1000) {
         return NextResponse.json(
-          { error: "Betrag muss zwischen 5€ und 999.999,99€ liegen." },
+          { error: "Betrag muss zwischen 1€ und 1.000€ liegen." },
           { status: 400 },
         );
       }
