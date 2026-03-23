@@ -144,7 +144,7 @@ export default function DashboardPage() {
       }
       if (!response.ok || !data.jsonText) {
         setPageState("idle");
-        setGenerateError("KI-Antwort fehlgeschlagen. Bitte erneut versuchen.");
+        setGenerateError(data.error ?? "KI-Antwort fehlgeschlagen. Bitte erneut versuchen.");
         return;
       }
 

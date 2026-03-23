@@ -130,7 +130,7 @@ function NewProjectForm() {
       }
       if (!res.ok || !data.jsonText) {
         setPageState("form");
-        setGenerateError("KI-Antwort fehlgeschlagen. Bitte erneut versuchen.");
+        setGenerateError(data.error ?? "KI-Antwort fehlgeschlagen. Bitte erneut versuchen.");
         return;
       }
 

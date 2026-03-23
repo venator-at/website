@@ -157,7 +157,7 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
 
       if (!response.ok || !data.jsonText) {
         setPageState("form");
-        setGenerateError("KI-Antwort fehlgeschlagen. Bitte erneut versuchen.");
+        setGenerateError(data.error ?? "KI-Antwort fehlgeschlagen. Bitte erneut versuchen.");
         return;
       }
 
