@@ -1,136 +1,109 @@
 'use client'
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { addToWaitlist } from '@/lib/firebase/waitlist';
 
-type Mode = 'light' | 'dark';
+type SubmitState = 'idle' | 'loading' | 'success' | 'duplicate' | 'error';
 
-interface Props {
-  mode: Mode;
-}
-
-export const WaitlistComponent = ({ mode }: Props) => {
+export const WaitlistComponent = () => {
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (email.trim() === '' || !email.includes('@')) {
-      return;
-    }
-    setSubmitted(true);
-    setEmail('');
-  };
+  const [state, setState] = useState<SubmitState>('idle');
 
   const isEmailValid = email.trim() !== '' && email.includes('@');
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!isEmailValid) return;
+
+    setState('loading');
+    try {
+      const result = await addToWaitlist(email);
+      setState(result.alreadyExists ? 'duplicate' : 'success');
+      setEmail('');
+    } catch {
+      setState('error');
+    }
+  };
+
+  const isDone = state === 'success' || state === 'duplicate';
+
   return (
-    <div className="flex justify-center items-center py-20">
-      <div
-        className={`${
-          mode === 'dark'
-            ? 'bg-black/60 border border-zinc-600 backdrop-blur-md'
-            : 'bg-white'
-        } w-full max-w-md mx-auto rounded-xl ${submitted ? 'p-1' : 'p-6'} z-50`}
-      >
-        {!submitted ? (
-          <div>
-            <div className="text-center">
-              <motion.h2
-                initial={{ opacity: 0, y: -20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.5 }}
-                className={`${
-                  mode === 'dark' ? 'text-white' : 'text-gray-800'
-                } text-3xl font-bold mb-4`}
-              >
-                Join the waitlist
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className={`${
-                  mode === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                } text-sm mb-6`}
-              >
-                Be the first to access Venator when it launches. Enter your email to secure your spot.
-              </motion.p>
-            </div>
-            <motion.form
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="flex items-center justify-center"
-              onSubmit={handleSubmit}
-            >
-              <input
-                type="email"
-                placeholder="Your email"
-                className="flex-1 w-full bg-zinc-900 appearance-none rounded-l-full py-2 px-4 text-gray-200 placeholder-gray-500 leading-tight focus:outline-none border border-zinc-600 focus:border-cyan-400/60"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <motion.button
-                type="submit"
-                disabled={!isEmailValid}
-                className={`bg-cyan-500 text-black font-semibold py-[9px] px-6 rounded-r-full focus:outline-none ${
-                  isEmailValid
-                    ? 'cursor-pointer hover:bg-cyan-400'
-                    : 'cursor-not-allowed opacity-40'
-                }`}
-              >
-                Join
-              </motion.button>
-            </motion.form>
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center py-6"
-          >
+    <div className="relative rounded-2xl border border-slate-700 bg-slate-900/50 backdrop-blur-sm p-8 md:p-12 overflow-hidden">
+      {/* Inner glow */}
+      <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400/5 via-transparent to-transparent" />
+
+      <div className="relative flex flex-col items-center text-center gap-6 max-w-lg mx-auto">
+        {!isDone ? (
+          <>
             <motion.h2
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: -16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.6 }}
               transition={{ duration: 0.5 }}
-              className={`${
-                mode === 'dark' ? 'text-white' : 'text-gray-800'
-              } text-2xl font-bold mb-4`}
+              className="text-3xl md:text-4xl font-bold tracking-tight text-slate-50"
             >
-              You&apos;re on the list!
+              Get early access
             </motion.h2>
             <motion.p
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className={`${
-                mode === 'dark' ? 'text-gray-400' : 'text-gray-500'
-              } mb-6`}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="text-slate-400 text-base leading-relaxed"
             >
-              Thanks for joining. We&apos;ll notify you as soon as Venator is ready.
+              Venator is launching soon. Join the waitlist and be the first to plan your architecture with AI.
             </motion.p>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+
+            <motion.form
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              onSubmit={handleSubmit}
+              className="flex w-full max-w-sm flex-col sm:flex-row gap-3"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="text-cyan-400 w-16 h-16 mx-auto mb-4"
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={state === 'loading'}
+                className="flex-1 rounded-lg bg-slate-800 border border-slate-600 px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400/60 disabled:opacity-60 transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={!isEmailValid || state === 'loading'}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-slate-900 hover:bg-cyan-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </motion.div>
+                {state === 'loading' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>Join <ArrowRight className="h-4 w-4" /></>
+                )}
+              </button>
+            </motion.form>
+
+            {state === 'error' && (
+              <p className="text-sm text-red-400">Something went wrong. Please try again.</p>
+            )}
+          </>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="flex flex-col items-center gap-4 py-4"
+          >
+            <CheckCircle2 className="h-14 w-14 text-cyan-400" strokeWidth={1.5} />
+            <h2 className="text-2xl font-bold text-slate-50">
+              {state === 'duplicate' ? "You're already on the list!" : "You're on the list!"}
+            </h2>
+            <p className="text-slate-400">
+              {state === 'duplicate'
+                ? "We already have your email. We'll notify you when Venator launches."
+                : "Thanks for joining. We'll notify you as soon as Venator is ready."}
+            </p>
           </motion.div>
         )}
       </div>
