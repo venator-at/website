@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 import { Footer2 } from "@/components/ui/footer2";
+import { WaitlistComponent } from "@/components/ui/waitlist";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -346,7 +347,19 @@ export default function HomePage() {
         </div>
       </section>
 
-{/* ─── FOOTER ───────────────────────────────────────────────── */}
+{/* ─── WAITLIST ─────────────────────────────────────────────── */}
+      <section id="waitlist" className="relative mx-auto max-w-5xl px-4 pb-12 lg:px-8">
+        <div className="mb-10 flex items-center gap-3">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent to-cyan-400/30" />
+          <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+            Early Access
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-l from-transparent to-cyan-400/30" />
+        </div>
+        <WaitlistComponent mode="dark" />
+      </section>
+
+      {/* ─── FOOTER ───────────────────────────────────────────────── */}
       <Footer2 />
     </div>
   );
