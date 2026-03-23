@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Layers, LogOut, Search } from 'lucide-react'
+import { BookOpen, Layers, LogOut, Search } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
@@ -71,6 +71,17 @@ export function AppSidebar({
       </SidebarHeader>
 
       <SidebarContent>
+        {/* Learn link */}
+        <div className="px-3 pt-1 pb-1">
+          <Link
+            href="/learn"
+            className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-2 text-xs text-slate-400 transition-all hover:border-white/15 hover:bg-white/8 hover:text-slate-200 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:px-2"
+          >
+            <BookOpen className="h-3.5 w-3.5 shrink-0 text-cyan-500" />
+            <span className="group-data-[state=collapsed]:hidden">Lernen & Docs</span>
+          </Link>
+        </div>
+
         {/* Search — hidden when collapsed */}
         <div className="px-3 pb-2 group-data-[state=collapsed]:hidden">
           <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 transition-shadow focus-within:ring-1 focus-within:ring-violet-500/50">

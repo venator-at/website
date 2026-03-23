@@ -5,7 +5,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpIcon,
+  Cpu,
   Loader2,
+  MessageCircle,
   Paperclip,
   X,
 } from "lucide-react";
@@ -85,6 +87,8 @@ const STARTERS = [
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
+export type ChatMode = "planning" | "chat";
+
 interface VercelV0ChatProps {
   value: string;
   onChange: (value: string) => void;
@@ -92,6 +96,8 @@ interface VercelV0ChatProps {
   submitting?: boolean;
   displayName?: string;
   onFilesChange?: (files: File[]) => void;
+  mode?: ChatMode;
+  onModeChange?: (mode: ChatMode) => void;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -103,6 +109,8 @@ export function VercelV0Chat({
   submitting = false,
   displayName,
   onFilesChange,
+  mode = "planning",
+  onModeChange,
 }: VercelV0ChatProps) {
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({
     minHeight: 72,
@@ -155,10 +163,20 @@ export function VercelV0Chat({
 
   const hasContent = value.trim().length > 0 || attachedFiles.length > 0;
 
+  const title =
+    mode === "planning"
+      ? `Was möchtest du heute bauen`
+      : `Was möchtest du wissen`;
+
+  const placeholder =
+    mode === "planning"
+      ? "Beschreibe deine App-Idee (z.B. Ein Marktplatz für gebrauchte Fahrräder)…"
+      : "Stell mir eine Frage zu Technologien, Konzepten oder deinem Projekt…";
+
   return (
-    <div className="flex flex-col items-center w-full max-w-3xl mx-auto space-y-6">
+    <div className="flex flex-col items-center w-full max-w-3xl mx-auto space-y-5">
       <h1 className="text-3xl font-bold tracking-tight text-center text-slate-50 md:text-4xl text-balance">
-        Was möchtest du heute bauen
+        {title}
         {displayName ? (
           <>
             ,{" "}
@@ -171,12 +189,46 @@ export function VercelV0Chat({
         )}
       </h1>
 
+      {/* Mode toggle */}
+      {onModeChange && (
+        <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1">
+          <button
+            type="button"
+            onClick={() => onModeChange("planning")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all",
+              mode === "planning"
+                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 shadow-[0_0_12px_rgba(34,211,238,0.12)]"
+                : "text-slate-500 hover:text-slate-300 border border-transparent"
+            )}
+          >
+            <Cpu className="h-3 w-3" />
+            Projektplanung
+          </button>
+          <button
+            type="button"
+            onClick={() => onModeChange("chat")}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all",
+              mode === "chat"
+                ? "bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/30 shadow-[0_0_12px_rgba(217,70,239,0.12)]"
+                : "text-slate-500 hover:text-slate-300 border border-transparent"
+            )}
+          >
+            <MessageCircle className="h-3 w-3" />
+            Freie Frage
+          </button>
+        </div>
+      )}
+
       <div className="w-full">
         <div
           className={cn(
             "rounded-2xl border transition-all duration-300 bg-slate-900/80 backdrop-blur-sm",
             hasContent
-              ? "border-cyan-400/50 shadow-[0_0_0_4px_rgba(34,211,238,0.08),0_0_32px_rgba(34,211,238,0.12)]"
+              ? mode === "planning"
+                ? "border-cyan-400/50 shadow-[0_0_0_4px_rgba(34,211,238,0.08),0_0_32px_rgba(34,211,238,0.12)]"
+                : "border-fuchsia-400/50 shadow-[0_0_0_4px_rgba(217,70,239,0.08),0_0_32px_rgba(217,70,239,0.12)]"
               : "border-white/10"
           )}
         >
@@ -186,7 +238,7 @@ export function VercelV0Chat({
             value={value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            placeholder="Beschreibe deine App-Idee (z.B. Ein Marktplatz für gebrauchte Fahrräder)…"
+            placeholder={placeholder}
             className={cn(
               "w-full px-5 py-4",
               "resize-none",
@@ -249,7 +301,9 @@ export function VercelV0Chat({
               className={cn(
                 "flex h-8 w-8 items-center justify-center rounded-lg transition-all border",
                 value.trim() && !submitting
-                  ? "bg-cyan-500 border-cyan-400 text-slate-950 hover:bg-cyan-400"
+                  ? mode === "planning"
+                    ? "bg-cyan-500 border-cyan-400 text-slate-950 hover:bg-cyan-400"
+                    : "bg-fuchsia-500 border-fuchsia-400 text-slate-950 hover:bg-fuchsia-400"
                   : "bg-transparent border-zinc-700 text-zinc-500 cursor-not-allowed opacity-40"
               )}
             >
@@ -263,20 +317,29 @@ export function VercelV0Chat({
           </div>
         </div>
 
-        {/* Starter chips */}
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:justify-center">
-          {STARTERS.map((s) => (
-            <button
-              key={s.label}
-              type="button"
-              onClick={() => handleStarterClick(s.prompt)}
-              className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white/90"
-            >
-              <span>{s.emoji}</span>
-              {s.label}
-            </button>
-          ))}
-        </div>
+        {/* Starter chips — only in planning mode */}
+        {mode === "planning" && (
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:justify-center">
+            {STARTERS.map((s) => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => handleStarterClick(s.prompt)}
+                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white/90"
+              >
+                <span>{s.emoji}</span>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Chat mode hint */}
+        {mode === "chat" && (
+          <p className="mt-3 text-center text-xs text-slate-600">
+            Frag mich alles — Technologien, Konzepte, Best Practices oder allgemeine Fragen.
+          </p>
+        )}
       </div>
     </div>
   );

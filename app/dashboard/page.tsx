@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +9,7 @@ import { getIdToken } from "firebase/auth";
 import { subscribeToProjects, createProject } from "@/lib/firebase/projects";
 import type { Project } from "@/types/project";
 import type { ArchitectureComponentInput, ArchitectureEdge, ArchitectureNode } from "@/types/architecture";
-import { VercelV0Chat } from "@/components/ui/v0-ai-chat";
+import { VercelV0Chat, type ChatMode } from "@/components/ui/v0-ai-chat";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ElegantShape } from "@/components/ui/shape-landing-hero";
@@ -21,6 +21,11 @@ import { layoutGraph } from "@/lib/graph/layout";
 import { cn } from "@/lib/utils";
 
 type PageState = "idle" | "submitting" | "graph-ready";
+
+interface ChatMessage {
+  role: "user" | "ai";
+  text: string;
+}
 
 function generateTitle(prompt: string): string {
   const trimmed = prompt.trim();
@@ -60,6 +65,13 @@ export default function DashboardPage() {
   const [projectTitle, setProjectTitle] = useState("");
   const [generateError, setGenerateError] = useState("");
 
+  // Chat mode state
+  const [chatMode, setChatMode] = useState<ChatMode>("planning");
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatSubmitting, setChatSubmitting] = useState(false);
+  const [chatError, setChatError] = useState("");
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!firebaseConfigured) return;
     if (!authLoading && !user) router.push("/login");
@@ -80,6 +92,11 @@ export default function DashboardPage() {
     const t = window.setTimeout(() => setGraphContainerOpen(true), 40);
     return () => window.clearTimeout(t);
   }, [pageState]);
+
+  // Scroll chat to bottom on new messages
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory, chatSubmitting]);
 
   const normalizeAiArchitecture = useCallback((jsonText: string) => {
     try {
@@ -115,14 +132,14 @@ export default function DashboardPage() {
     } catch { return null; }
   }, []);
 
-  // Called by the chat send button — just opens the context modal
+  // Called by the chat send button — opens context modal (planning mode)
   const handleOpenModal = useCallback(() => {
     if (!prompt.trim()) return;
     setGenerateError("");
     setModalOpen(true);
   }, [prompt]);
 
-  // Called by the modal confirm button — runs the actual API
+  // Called by the modal confirm button — runs the architecture API
   const handleAnalyze = useCallback(async () => {
     const idea = prompt.trim();
     if (!idea) return;
@@ -196,6 +213,44 @@ export default function DashboardPage() {
     }
   }, [prompt, projectType, experienceLevel, budgetLevel, user, firebaseConfigured, normalizeAiArchitecture]);
 
+  // Called in free text chat mode
+  const handleChatSubmit = useCallback(async () => {
+    const message = prompt.trim();
+    if (!message || chatSubmitting) return;
+
+    setPrompt("");
+    setChatError("");
+    setChatHistory((prev) => [...prev, { role: "user", text: message }]);
+    setChatSubmitting(true);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      const data = (await response.json()) as { text?: string; error?: string };
+
+      if (!response.ok || !data.text) {
+        setChatHistory((prev) => [
+          ...prev,
+          { role: "ai", text: data.error ?? "Antwort fehlgeschlagen. Bitte erneut versuchen." },
+        ]);
+        return;
+      }
+
+      setChatHistory((prev) => [...prev, { role: "ai", text: data.text! }]);
+    } catch {
+      setChatHistory((prev) => [
+        ...prev,
+        { role: "ai", text: "Die Anfrage ist fehlgeschlagen. Bitte erneut versuchen." },
+      ]);
+    } finally {
+      setChatSubmitting(false);
+    }
+  }, [prompt, chatSubmitting]);
+
   const handleModalKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape") setModalOpen(false);
   }, []);
@@ -205,11 +260,28 @@ export default function DashboardPage() {
     setDetailsOpen(true);
   }, []);
 
+  // When switching to planning mode, reset chat state; when switching to chat, reset graph state
+  const handleModeChange = useCallback((mode: ChatMode) => {
+    setChatMode(mode);
+    if (mode === "planning") {
+      setChatHistory([]);
+      setChatError("");
+    } else {
+      setPageState("idle");
+      setGenerateError("");
+      setModalOpen(false);
+    }
+  }, []);
+
   const displayName =
     firstName ||
     user?.displayName?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
     "there";
+
+  const isSubmitting = chatMode === "planning" ? pageState === "submitting" : chatSubmitting;
+
+  const handleSubmit = chatMode === "planning" ? handleOpenModal : () => void handleChatSubmit();
 
   if (authLoading) {
     return (
@@ -236,8 +308,8 @@ export default function DashboardPage() {
       <SidebarInset className="bg-slate-950 text-slate-100">
         <DashboardHeader />
 
-        {/* ── IDLE / SUBMITTING: centered prompt ─────────────────────────────── */}
-        {(pageState === "idle" || pageState === "submitting") && (
+        {/* ── PLANNING MODE: IDLE / SUBMITTING ────────────────────────────────── */}
+        {chatMode === "planning" && (pageState === "idle" || pageState === "submitting") && (
           <section className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-10">
             <ElegantShape
               delay={0.3}
@@ -284,9 +356,11 @@ export default function DashboardPage() {
               <VercelV0Chat
                 value={prompt}
                 onChange={setPrompt}
-                onSubmit={handleOpenModal}
-                submitting={pageState === "submitting"}
+                onSubmit={handleSubmit}
+                submitting={isSubmitting}
                 displayName={displayName}
+                mode={chatMode}
+                onModeChange={handleModeChange}
               />
 
               {/* Loading indicator */}
@@ -312,8 +386,159 @@ export default function DashboardPage() {
           </section>
         )}
 
+        {/* ── CHAT MODE: NO HISTORY (centered input) ──────────────────────────── */}
+        {chatMode === "chat" && chatHistory.length === 0 && !chatSubmitting && (
+          <section className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-10">
+            <ElegantShape
+              delay={0.3}
+              width={500}
+              height={120}
+              rotate={12}
+              gradient="from-fuchsia-500/[0.12]"
+              className="pointer-events-none left-[-4%] top-[10%]"
+            />
+            <ElegantShape
+              delay={0.5}
+              width={400}
+              height={100}
+              rotate={-15}
+              gradient="from-violet-500/[0.12]"
+              className="pointer-events-none right-[-2%] bottom-[15%]"
+            />
+
+            <div className="relative z-10 flex w-full max-w-3xl flex-col items-center gap-4">
+              <VercelV0Chat
+                value={prompt}
+                onChange={setPrompt}
+                onSubmit={handleSubmit}
+                submitting={isSubmitting}
+                displayName={displayName}
+                mode={chatMode}
+                onModeChange={handleModeChange}
+              />
+            </div>
+          </section>
+        )}
+
+        {/* ── CHAT MODE: WITH HISTORY (conversation layout) ────────────────────── */}
+        {chatMode === "chat" && (chatHistory.length > 0 || chatSubmitting) && (
+          <section className="flex flex-1 flex-col overflow-hidden px-4 pb-6 pt-4">
+            {/* Mode toggle + scrollable messages */}
+            <div className="flex flex-1 flex-col overflow-hidden max-w-3xl mx-auto w-full gap-4">
+              {/* Compact mode toggle */}
+              <div className="flex items-center gap-1 self-center rounded-full border border-white/10 bg-white/5 p-1">
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("planning")}
+                  className="flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-xs font-medium text-slate-500 transition-all hover:text-slate-300"
+                >
+                  Projektplanung
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 rounded-full border border-fuchsia-400/30 bg-fuchsia-500/20 px-3 py-1.5 text-xs font-medium text-fuchsia-300"
+                >
+                  Freie Frage
+                </button>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                {chatHistory.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex",
+                      msg.role === "user" ? "justify-end" : "justify-start"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "max-w-[80%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap leading-relaxed",
+                        msg.role === "user"
+                          ? "bg-fuchsia-500/20 text-fuchsia-50 border border-fuchsia-500/25"
+                          : "bg-slate-800/80 text-slate-200 border border-white/8"
+                      )}
+                    >
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Typing indicator */}
+                {chatSubmitting && (
+                  <div className="flex justify-start">
+                    <div className="rounded-2xl border border-white/8 bg-slate-800/80 px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500 animate-bounce [animation-delay:0ms]" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500 animate-bounce [animation-delay:150ms]" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-slate-500 animate-bounce [animation-delay:300ms]" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {chatError && (
+                  <div className="rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                    {chatError}
+                  </div>
+                )}
+
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Input pinned to bottom */}
+              <div className="shrink-0">
+                <div
+                  className={cn(
+                    "rounded-2xl border transition-all duration-300 bg-slate-900/80 backdrop-blur-sm",
+                    prompt.trim()
+                      ? "border-fuchsia-400/50 shadow-[0_0_0_4px_rgba(217,70,239,0.08),0_0_32px_rgba(217,70,239,0.12)]"
+                      : "border-white/10"
+                  )}
+                >
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (prompt.trim() && !chatSubmitting) void handleChatSubmit();
+                      }
+                    }}
+                    placeholder="Stell eine weitere Frage…"
+                    rows={2}
+                    className="w-full resize-none bg-transparent px-5 py-4 text-sm text-slate-200 placeholder:text-slate-600 outline-none"
+                  />
+                  <div className="flex items-center justify-end px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => void handleChatSubmit()}
+                      disabled={!prompt.trim() || chatSubmitting}
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg transition-all border",
+                        prompt.trim() && !chatSubmitting
+                          ? "bg-fuchsia-500 border-fuchsia-400 text-slate-950 hover:bg-fuchsia-400"
+                          : "bg-transparent border-zinc-700 text-zinc-500 cursor-not-allowed opacity-40"
+                      )}
+                    >
+                      {chatSubmitting ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ── CONTEXT MODAL ───────────────────────────────────────────────────── */}
-        {modalOpen && (
+        {modalOpen && chatMode === "planning" && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onKeyDown={handleModalKeyDown}
@@ -439,7 +664,7 @@ export default function DashboardPage() {
         )}
 
         {/* ── GRAPH PHASE ─────────────────────────────────────────────────────── */}
-        {pageState === "graph-ready" && (
+        {chatMode === "planning" && pageState === "graph-ready" && (
           <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-6 pt-4">
             <div className="mb-4 flex items-center justify-between">
               <div>
