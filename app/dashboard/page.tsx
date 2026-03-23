@@ -263,52 +263,98 @@ export default function DashboardPage() {
                 displayName={displayName}
               />
 
-              {/* Project context selects */}
-              <div className="flex w-full gap-3">
-                <div className="flex flex-1 flex-col gap-1">
-                  <label className="text-[11px] font-medium text-slate-500">Projekttyp</label>
-                  <select
-                    value={projectType}
-                    onChange={(e) => setProjectType(e.target.value)}
-                    disabled={pageState === "submitting"}
-                    className="w-full rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-xs text-slate-300 outline-none transition-colors focus:border-cyan-400/40 disabled:opacity-40"
-                  >
-                    <option value="web-app">Web App</option>
-                    <option value="mobile">Mobile App</option>
-                    <option value="api">API / Backend</option>
-                    <option value="saas">SaaS Produkt</option>
-                    <option value="ecommerce">E-Commerce</option>
-                    <option value="other">Sonstiges</option>
-                  </select>
-                </div>
+              {/* Project context */}
+              <div className="w-full rounded-2xl border border-white/8 bg-slate-900/60 px-5 py-4 backdrop-blur-sm">
+                <div className="flex flex-col gap-4">
 
-                <div className="flex flex-1 flex-col gap-1">
-                  <label className="text-[11px] font-medium text-slate-500">Erfahrungslevel</label>
-                  <select
-                    value={experienceLevel}
-                    onChange={(e) => setExperienceLevel(e.target.value)}
-                    disabled={pageState === "submitting"}
-                    className="w-full rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-xs text-slate-300 outline-none transition-colors focus:border-cyan-400/40 disabled:opacity-40"
-                  >
-                    <option value="beginner">Anfänger</option>
-                    <option value="junior">Junior</option>
-                    <option value="mid">Mid-Level</option>
-                  </select>
-                </div>
+                  {/* Project type + Experience level */}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-slate-400">Projekttyp</label>
+                      <select
+                        value={projectType}
+                        onChange={(e) => setProjectType(e.target.value)}
+                        disabled={pageState === "submitting"}
+                        className="w-full rounded-xl border border-white/10 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-200 outline-none transition-colors focus:border-cyan-400/50 focus:bg-slate-800 disabled:opacity-40 cursor-pointer"
+                      >
+                        <option value="web-app">Web App</option>
+                        <option value="mobile">Mobile App</option>
+                        <option value="api">API / Backend</option>
+                        <option value="saas">SaaS Produkt</option>
+                        <option value="ecommerce">E-Commerce</option>
+                        <option value="other">Sonstiges</option>
+                      </select>
+                    </div>
 
-                <div className="flex flex-1 flex-col gap-1">
-                  <label className="text-[11px] font-medium text-slate-500">Budget</label>
-                  <select
-                    value={budgetLevel}
-                    onChange={(e) => setBudgetLevel(e.target.value)}
-                    disabled={pageState === "submitting"}
-                    className="w-full rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2 text-xs text-slate-300 outline-none transition-colors focus:border-cyan-400/40 disabled:opacity-40"
-                  >
-                    <option value="free">Kostenlos</option>
-                    <option value="low">Niedrig (&lt; 20 € / Mo.)</option>
-                    <option value="medium">Mittel (20–100 € / Mo.)</option>
-                    <option value="high">Hoch (&gt; 100 € / Mo.)</option>
-                  </select>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-slate-400">Erfahrungslevel</label>
+                      <div className="flex gap-2">
+                        {[
+                          { value: "beginner", label: "Anfänger" },
+                          { value: "junior", label: "Junior" },
+                          { value: "mid", label: "Mid" },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            disabled={pageState === "submitting"}
+                            onClick={() => setExperienceLevel(opt.value)}
+                            className={cn(
+                              "flex-1 rounded-xl border py-2.5 text-xs font-medium transition-all disabled:opacity-40",
+                              experienceLevel === opt.value
+                                ? "border-cyan-400/60 bg-cyan-500/15 text-cyan-300"
+                                : "border-white/8 bg-white/4 text-slate-500 hover:border-white/15 hover:text-slate-300"
+                            )}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Budget */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-medium text-slate-400">Budget-Rahmen</label>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {[
+                        { value: "free", label: "Kostenlos", sub: "Free Tier / Open-Source" },
+                        { value: "low", label: "Niedrig", sub: "< 20 € / Monat" },
+                        { value: "medium", label: "Mittel", sub: "20–100 € / Monat" },
+                        { value: "high", label: "Hoch", sub: "> 100 € / Monat" },
+                      ].map((opt) => {
+                        const active = budgetLevel === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            disabled={pageState === "submitting"}
+                            onClick={() => setBudgetLevel(opt.value)}
+                            className={cn(
+                              "flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all disabled:opacity-40",
+                              active
+                                ? "border-cyan-400/60 bg-cyan-500/15"
+                                : "border-white/8 bg-white/4 hover:border-white/15"
+                            )}
+                          >
+                            <span className={cn(
+                              "mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors",
+                              active ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"
+                            )}>
+                              {active && <span className="h-1.5 w-1.5 rounded-full bg-slate-950" />}
+                            </span>
+                            <span className="flex flex-col">
+                              <span className={cn("text-xs font-medium", active ? "text-cyan-300" : "text-slate-300")}>
+                                {opt.label}
+                              </span>
+                              <span className="text-[11px] text-slate-600">{opt.sub}</span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
