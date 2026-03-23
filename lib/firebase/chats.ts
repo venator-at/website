@@ -2,6 +2,7 @@ import {
   collection,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   query,
   where,
@@ -36,6 +37,11 @@ export async function createChatConversation(
     updatedAt: serverTimestamp(),
   });
   return ref.id;
+}
+
+export async function deleteChatConversation(chatId: string): Promise<void> {
+  if (!db) throw new Error("Firestore not initialized");
+  await deleteDoc(doc(db, "chats", chatId));
 }
 
 export async function updateChatConversation(
