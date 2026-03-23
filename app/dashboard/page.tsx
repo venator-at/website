@@ -44,7 +44,8 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [prompt, setPrompt] = useState("");
 
-  // Project context
+  // Context modal
+  const [modalOpen, setModalOpen] = useState(false);
   const [projectType, setProjectType] = useState("web-app");
   const [experienceLevel, setExperienceLevel] = useState("beginner");
   const [budgetLevel, setBudgetLevel] = useState("free");
@@ -102,10 +103,19 @@ export default function DashboardPage() {
     } catch { return null; }
   }, []);
 
-  const handleSubmit = useCallback(async () => {
+  // Called by the chat send button — just opens the context modal
+  const handleOpenModal = useCallback(() => {
+    if (!prompt.trim()) return;
+    setGenerateError("");
+    setModalOpen(true);
+  }, [prompt]);
+
+  // Called by the modal confirm button — runs the actual API
+  const handleAnalyze = useCallback(async () => {
     const idea = prompt.trim();
     if (!idea) return;
 
+    setModalOpen(false);
     setPageState("submitting");
     setGenerateError("");
     setGraphNodes([]);
@@ -173,6 +183,10 @@ export default function DashboardPage() {
       setGenerateError("Die Anfrage ist fehlgeschlagen. Bitte erneut versuchen.");
     }
   }, [prompt, projectType, experienceLevel, budgetLevel, user, firebaseConfigured, normalizeAiArchitecture]);
+
+  const handleModalKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Escape") setModalOpen(false);
+  }, []);
 
   const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
     setSelectedComponent(component);
@@ -258,105 +272,10 @@ export default function DashboardPage() {
               <VercelV0Chat
                 value={prompt}
                 onChange={setPrompt}
-                onSubmit={() => void handleSubmit()}
+                onSubmit={handleOpenModal}
                 submitting={pageState === "submitting"}
                 displayName={displayName}
               />
-
-              {/* Project context */}
-              <div className="w-full rounded-2xl border border-white/8 bg-slate-900/60 px-5 py-4 backdrop-blur-sm">
-                <div className="flex flex-col gap-4">
-
-                  {/* Project type + Experience level */}
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-slate-400">Projekttyp</label>
-                      <select
-                        value={projectType}
-                        onChange={(e) => setProjectType(e.target.value)}
-                        disabled={pageState === "submitting"}
-                        className="w-full rounded-xl border border-white/10 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-200 outline-none transition-colors focus:border-cyan-400/50 focus:bg-slate-800 disabled:opacity-40 cursor-pointer"
-                      >
-                        <option value="web-app">Web App</option>
-                        <option value="mobile">Mobile App</option>
-                        <option value="api">API / Backend</option>
-                        <option value="saas">SaaS Produkt</option>
-                        <option value="ecommerce">E-Commerce</option>
-                        <option value="other">Sonstiges</option>
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-slate-400">Erfahrungslevel</label>
-                      <div className="flex gap-2">
-                        {[
-                          { value: "beginner", label: "Anfänger" },
-                          { value: "junior", label: "Junior" },
-                          { value: "mid", label: "Mid" },
-                        ].map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            disabled={pageState === "submitting"}
-                            onClick={() => setExperienceLevel(opt.value)}
-                            className={cn(
-                              "flex-1 rounded-xl border py-2.5 text-xs font-medium transition-all disabled:opacity-40",
-                              experienceLevel === opt.value
-                                ? "border-cyan-400/60 bg-cyan-500/15 text-cyan-300"
-                                : "border-white/8 bg-white/4 text-slate-500 hover:border-white/15 hover:text-slate-300"
-                            )}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Budget */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-slate-400">Budget-Rahmen</label>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {[
-                        { value: "free", label: "Kostenlos", sub: "Free Tier / Open-Source" },
-                        { value: "low", label: "Niedrig", sub: "< 20 € / Monat" },
-                        { value: "medium", label: "Mittel", sub: "20–100 € / Monat" },
-                        { value: "high", label: "Hoch", sub: "> 100 € / Monat" },
-                      ].map((opt) => {
-                        const active = budgetLevel === opt.value;
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            disabled={pageState === "submitting"}
-                            onClick={() => setBudgetLevel(opt.value)}
-                            className={cn(
-                              "flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all disabled:opacity-40",
-                              active
-                                ? "border-cyan-400/60 bg-cyan-500/15"
-                                : "border-white/8 bg-white/4 hover:border-white/15"
-                            )}
-                          >
-                            <span className={cn(
-                              "mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors",
-                              active ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"
-                            )}>
-                              {active && <span className="h-1.5 w-1.5 rounded-full bg-slate-950" />}
-                            </span>
-                            <span className="flex flex-col">
-                              <span className={cn("text-xs font-medium", active ? "text-cyan-300" : "text-slate-300")}>
-                                {opt.label}
-                              </span>
-                              <span className="text-[11px] text-slate-600">{opt.sub}</span>
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                </div>
-              </div>
 
               {/* Loading indicator */}
               {pageState === "submitting" && (
@@ -379,6 +298,132 @@ export default function DashboardPage() {
               )}
             </div>
           </section>
+        )}
+
+        {/* ── CONTEXT MODAL ───────────────────────────────────────────────────── */}
+        {modalOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onKeyDown={handleModalKeyDown}
+          >
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+              onClick={() => setModalOpen(false)}
+            />
+
+            {/* Modal card */}
+            <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-2xl">
+              <h2 className="mb-1 text-lg font-semibold text-slate-50">Projekt spezialisieren</h2>
+              <p className="mb-5 text-sm text-slate-500">
+                Ein paar Details helfen der KI, bessere Empfehlungen zu geben.
+              </p>
+
+              <div className="flex flex-col gap-5">
+                {/* Project type */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-slate-400">Projekttyp</label>
+                  <select
+                    value={projectType}
+                    onChange={(e) => setProjectType(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-slate-800/60 px-4 py-2.5 text-sm text-slate-200 outline-none transition-colors focus:border-cyan-400/50 focus:bg-slate-800 cursor-pointer"
+                  >
+                    <option value="web-app">Web App</option>
+                    <option value="mobile">Mobile App</option>
+                    <option value="api">API / Backend</option>
+                    <option value="saas">SaaS Produkt</option>
+                    <option value="ecommerce">E-Commerce</option>
+                    <option value="other">Sonstiges</option>
+                  </select>
+                </div>
+
+                {/* Experience level */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-slate-400">Erfahrungslevel</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: "beginner", label: "Anfänger" },
+                      { value: "junior", label: "Junior" },
+                      { value: "mid", label: "Mid" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setExperienceLevel(opt.value)}
+                        className={cn(
+                          "flex-1 rounded-xl border py-2.5 text-xs font-medium transition-all",
+                          experienceLevel === opt.value
+                            ? "border-cyan-400/60 bg-cyan-500/15 text-cyan-300"
+                            : "border-white/8 bg-white/4 text-slate-500 hover:border-white/15 hover:text-slate-300"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Budget */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-slate-400">Budget-Rahmen</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: "free", label: "Kostenlos", sub: "Free Tier / Open-Source" },
+                      { value: "low", label: "Niedrig", sub: "< 20 € / Monat" },
+                      { value: "medium", label: "Mittel", sub: "20–100 € / Monat" },
+                      { value: "high", label: "Hoch", sub: "> 100 € / Monat" },
+                    ].map((opt) => {
+                      const active = budgetLevel === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setBudgetLevel(opt.value)}
+                          className={cn(
+                            "flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all",
+                            active
+                              ? "border-cyan-400/60 bg-cyan-500/15"
+                              : "border-white/8 bg-white/4 hover:border-white/15"
+                          )}
+                        >
+                          <span className={cn(
+                            "mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors",
+                            active ? "border-cyan-400 bg-cyan-400" : "border-slate-600 bg-transparent"
+                          )}>
+                            {active && <span className="h-1.5 w-1.5 rounded-full bg-slate-950" />}
+                          </span>
+                          <span className="flex flex-col">
+                            <span className={cn("text-xs font-medium", active ? "text-cyan-300" : "text-slate-300")}>
+                              {opt.label}
+                            </span>
+                            <span className="text-[11px] text-slate-600">{opt.sub}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="flex-1 rounded-xl border border-white/10 bg-white/4 py-2.5 text-sm text-slate-400 transition-colors hover:bg-white/8 hover:text-slate-200"
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleAnalyze()}
+                  className="flex-1 rounded-xl border border-cyan-400/50 bg-cyan-500/20 py-2.5 text-sm font-semibold text-cyan-300 transition-all hover:border-cyan-400/70 hover:bg-cyan-500/30"
+                >
+                  Analyse starten →
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* ── GRAPH PHASE ─────────────────────────────────────────────────────── */}
