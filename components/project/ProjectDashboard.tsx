@@ -57,10 +57,10 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-col gap-4">
 
-        {/* ── 1. Architektur-Graph (largest tile) ──────────────────────── */}
-        <div className={cn(tile, "lg:col-span-2 lg:row-span-2 flex flex-col h-[500px]")}>
+        {/* ── 1. Architektur-Graph (volle Breite, obere Hälfte) ─────────── */}
+        <div className={cn(tile, "flex flex-col h-[480px]")}>
           <div className="flex items-center gap-2 border-b border-white/6 px-5 py-3.5">
             <div className="rounded-lg bg-cyan-500/15 p-1.5">
               <Network className="h-4 w-4 text-cyan-400" />
@@ -72,6 +72,9 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
             <GraphCanvas nodes={nodes} edges={edges} onNodeSelect={handleNodeSelect} />
           </div>
         </div>
+
+        {/* ── Untere Reihe: Kosten · Checkliste · Setup ─────────────────── */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 
         {/* ── 2. Kostenabschätzung ──────────────────────────────────────── */}
         <div className={cn(tile, "flex flex-col gap-4 p-5")}>
@@ -157,7 +160,7 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         </div>
 
         {/* ── 4. Setup-Befehle (Terminal) ───────────────────────────────── */}
-        <div className={cn(tile, "flex flex-col gap-4 p-5 md:col-span-2")}>
+        <div className={cn(tile, "flex flex-col gap-4 p-5")}>
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-cyan-500/15 p-1.5">
               <Terminal className="h-4 w-4 text-cyan-400" />
@@ -213,6 +216,8 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
           </div>
         </div>
 
+
+        </div>{/* end untere Reihe */}
 
       </div>
 

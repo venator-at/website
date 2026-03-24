@@ -34,6 +34,9 @@ export default function RootLayout({
         <AuthProvider>
           <TooltipProvider>{children}</TooltipProvider>
         </AuthProvider>
+        <span className="fixed bottom-2 right-3 z-50 font-mono text-[10px] text-white/20 select-none pointer-events-none">
+          v{process.env.NEXT_PUBLIC_BUILD_VERSION}
+        </span>
       </body>
     </html>
   );
