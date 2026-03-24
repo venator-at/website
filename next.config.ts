@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
-import { execSync } from "child_process";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 function getBuildVersion(): string {
   try {
-    const commitCount = parseInt(execSync("git rev-list --count HEAD", { encoding: "utf8" }).trim(), 10);
-    const version = commitCount - 104;
-    return `0.${version.toString().padStart(3, "0")}`;
+    const data = JSON.parse(readFileSync(join(__dirname, "version.json"), "utf8")) as { v: number };
+    return `0.${data.v.toString().padStart(3, "0")}`;
   } catch {
     return "0.000";
   }
