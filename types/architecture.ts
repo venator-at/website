@@ -78,6 +78,8 @@ export interface ArchitectureNodeData {
 export interface ArchitectureEdgeData {
   [key: string]: unknown;
   relationType: string;
+  fromName: string;
+  toName: string;
 }
 
 export type ArchitectureNode = Node<ArchitectureNodeData, "architectureNode">;

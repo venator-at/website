@@ -424,6 +424,14 @@ export function parseArchitectureJson(raw: string): ParseArchitectureResult {
   };
 }
 
+function shortEdgeLabel(type: string): string {
+  const em = type.indexOf(" \u2014 ");
+  if (em > 0) return type.slice(0, em);
+  const en = type.indexOf(" \u2013 ");
+  if (en > 0) return type.slice(0, en);
+  return type.length > 32 ? `${type.slice(0, 29)}\u2026` : type;
+}
+
 function toNodeId(componentName: string): string {
   return componentName
     .toLowerCase()
@@ -469,7 +477,7 @@ export function transformArchitectureToGraph(
     source: nameToId.get(connection.from) ?? "",
     target: nameToId.get(connection.to) ?? "",
     animated: true,
-    label: connection.type,
+    label: shortEdgeLabel(connection.type),
     markerEnd: {
       type: MarkerType.ArrowClosed,
       width: 20,
@@ -495,6 +503,8 @@ export function transformArchitectureToGraph(
     },
     data: {
       relationType: connection.type,
+      fromName: connection.from,
+      toName: connection.to,
     },
   }));
 

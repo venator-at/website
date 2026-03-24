@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { ComponentDetailsSheet } from "@/components/panels/component-details-sheet";
+import { ConnectionDetailsSheet } from "@/components/panels/connection-details-sheet";
 import { cn } from "@/lib/utils";
 import type {
   ArchitectureComponentInput,
@@ -30,12 +31,19 @@ interface ProjectDashboardProps {
 export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: ProjectDashboardProps) {
   const [selectedComponent, setSelectedComponent] = useState<ArchitectureComponentInput | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<ArchitectureEdge | null>(null);
+  const [connectionOpen, setConnectionOpen] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
 
   const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
     setSelectedComponent(component);
     setDetailsOpen(true);
+  }, []);
+
+  const handleEdgeSelect = useCallback((edge: ArchitectureEdge) => {
+    setSelectedEdge(edge);
+    setConnectionOpen(true);
   }, []);
 
   const handleCopyCommand = (command: string, index: number) => {
@@ -69,7 +77,7 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
             <span className="ml-auto text-xs text-slate-500">{nodes.length} Komponenten</span>
           </div>
           <div className="flex-1 min-h-0 flex flex-col">
-            <GraphCanvas nodes={nodes} edges={edges} onNodeSelect={handleNodeSelect} />
+            <GraphCanvas nodes={nodes} edges={edges} onNodeSelect={handleNodeSelect} onEdgeSelect={handleEdgeSelect} />
           </div>
         </div>
 
@@ -231,6 +239,11 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         component={selectedComponent}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+      />
+      <ConnectionDetailsSheet
+        edge={selectedEdge}
+        open={connectionOpen}
+        onOpenChange={setConnectionOpen}
       />
     </>
   );

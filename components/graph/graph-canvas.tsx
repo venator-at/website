@@ -9,6 +9,7 @@ import {
   ReactFlow,
   useEdgesState,
   useNodesState,
+  type EdgeMouseHandler,
   type NodeMouseHandler,
   type ReactFlowInstance,
 } from "@xyflow/react";
@@ -26,6 +27,7 @@ interface GraphCanvasProps {
   nodes: ArchitectureNode[];
   edges: ArchitectureEdge[];
   onNodeSelect: (component: ArchitectureComponentInput) => void;
+  onEdgeSelect: (edge: ArchitectureEdge) => void;
 }
 
 const nodeTypes = {
@@ -36,6 +38,7 @@ export function GraphCanvas({
   nodes,
   edges,
   onNodeSelect,
+  onEdgeSelect,
 }: GraphCanvasProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance<ArchitectureNode, ArchitectureEdge> | null>(null);
@@ -110,6 +113,10 @@ export function GraphCanvas({
     onNodeSelect(node.data.component);
   };
 
+  const handleEdgeClick: EdgeMouseHandler<ArchitectureEdge> = (_, edge) => {
+    onEdgeSelect(edge);
+  };
+
   return (
     <section className="glass-panel neon-ring relative flex min-h-0 flex-1 w-full flex-col overflow-hidden rounded-2xl">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.12),transparent_34%),radial-gradient(circle_at_84%_78%,rgba(168,85,247,0.12),transparent_30%)]" />
@@ -136,6 +143,7 @@ export function GraphCanvas({
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeClick={handleNodeClick}
+          onEdgeClick={handleEdgeClick}
           onInit={setFlowInstance}
           fitView
           fitViewOptions={{ padding: 0.08 }}
@@ -155,7 +163,7 @@ export function GraphCanvas({
           defaultEdgeOptions={{
             style: { strokeWidth: 2, stroke: "#0f766e" },
           }}
-          className="!h-full !w-full !bg-transparent [&_.react-flow__pane]:cursor-grab [&_.react-flow__pane:active]:cursor-grabbing"
+          className="!h-full !w-full !bg-transparent [&_.react-flow__pane]:cursor-grab [&_.react-flow__pane:active]:cursor-grabbing [&_.react-flow__edge]:cursor-pointer"
         >
           <Background
             variant={BackgroundVariant.Dots}
