@@ -36,7 +36,7 @@ export function GlowCard({ children, className }: GlowCardProps) {
         className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
         style={{
           background:
-            "radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(99,179,237,0.15), transparent 40%)",
+            "radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(139,92,246,0.12), transparent 40%)",
         }}
       />
       {/* Static border */}

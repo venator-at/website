@@ -2,16 +2,12 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, LogOut, Settings, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
 import { cn } from '@/lib/utils'
-
-async function handleFirebaseSignOut() {
-  if (auth) await signOut(auth)
-}
 
 function CreditsBadge({ credits }: { credits: number }) {
   const low = credits < 10
@@ -39,8 +35,14 @@ const NAV_ITEMS = [
 
 export function DashboardHeader() {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, credits } = useAuth()
   const initial = (user?.displayName?.[0] ?? user?.email?.[0] ?? '?').toUpperCase()
+
+  async function handleSignOut() {
+    if (auth) await signOut(auth)
+    router.push('/login')
+  }
 
   return (
     <div className="pointer-events-none fixed top-4 left-0 right-0 z-50 flex justify-center">
@@ -73,7 +75,7 @@ export function DashboardHeader() {
           <div className="flex items-center gap-1.5 pl-1">
             <CreditsBadge credits={credits} />
             <button
-              onClick={handleFirebaseSignOut}
+              onClick={handleSignOut}
               className="flex items-center rounded-full p-1.5 text-slate-500 transition-colors hover:bg-white/8 hover:text-slate-300"
               title="Abmelden"
             >

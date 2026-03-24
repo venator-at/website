@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { BookOpen, Layers, LogOut, MessageSquare, Search, Trash2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { signOut } from 'firebase/auth'
@@ -24,10 +25,6 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar'
 
-async function handleFirebaseSignOut() {
-  if (auth) await signOut(auth)
-}
-
 type PendingDelete =
   | { type: 'project'; id: string; title: string }
   | { type: 'chat'; id: string; title: string }
@@ -46,9 +43,15 @@ export function AppSidebar({
   onChatSelect: (chat: ChatConversation) => void
 }) {
   const { user, firstName } = useAuth()
+  const router = useRouter()
   const displayName =
     firstName || user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || ''
   const initial = (user?.displayName?.[0] ?? user?.email?.[0] ?? '?').toUpperCase()
+
+  async function handleSignOut() {
+    if (auth) await signOut(auth)
+    router.push('/login')
+  }
 
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -219,7 +222,7 @@ export function AppSidebar({
               <span className="truncate text-[10px] text-slate-500">{user?.email}</span>
             </div>
             <button
-              onClick={handleFirebaseSignOut}
+              onClick={handleSignOut}
               className="shrink-0 rounded-md p-1 text-slate-600 transition-colors hover:bg-white/5 hover:text-slate-300 group-data-[state=collapsed]:hidden"
               title="Abmelden"
             >

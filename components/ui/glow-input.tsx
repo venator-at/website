@@ -41,7 +41,7 @@ export function GlowInput({ label, icon, hint, className, disabled, ...props }: 
             "transition-all duration-200 outline-none",
             icon && "pl-9",
             focused
-              ? "border-blue-500/50 bg-white/[0.06] shadow-[0_0_0_3px_rgba(59,130,246,0.08)]"
+              ? "border-violet-500/50 bg-white/[0.06] shadow-[0_0_0_3px_rgba(139,92,246,0.08)]"
               : "border-white/[0.08] hover:border-white/[0.14]",
             disabled && "opacity-40 cursor-not-allowed",
             className
