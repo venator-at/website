@@ -315,7 +315,7 @@ function NewProjectForm() {
           <div className={cn("flex-1 overflow-hidden rounded-2xl transition-all duration-700",
             graphReady ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
             {graphReady && graphNodes.length > 0
-              ? <GraphCanvas nodes={graphNodes} edges={graphEdges} onNodeSelect={(c) => { setSelectedComponent(c); setDetailsOpen(true); }} />
+              ? <GraphCanvas nodes={graphNodes} edges={graphEdges} onNodeSelect={(c) => { setSelectedComponent(c); setDetailsOpen(true); }} onEdgeSelect={() => {}} />
               : <div className="flex h-full items-center justify-center rounded-2xl border border-cyan-400/20 bg-slate-900/60 text-sm text-slate-400"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Wird geladen…</div>}
           </div>
         </main>
