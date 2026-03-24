@@ -188,6 +188,7 @@ export async function POST(request: Request) {
             temperature: 0.2,
             maxOutputTokens: 4096,
             topP: 0.9,
+            responseMimeType: "application/json",
           },
         }),
       },
