@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkRateLimit, getRateLimitIdentifier } from "@/lib/firebase/rateLimit";
 
 interface ChatRequest {
   message?: string;
@@ -13,6 +14,19 @@ export async function POST(request: Request) {
   };
 
   try {
+    // Rate limit: 10 calls per minute per IP (chat route has no auth)
+    const rateLimitId = getRateLimitIdentifier(request, null);
+    const rateLimit = await checkRateLimit(rateLimitId);
+    if (!rateLimit.allowed) {
+      const retryAfterSec = Math.ceil(rateLimit.retryAfterMs / 1000);
+      const response = respond(
+        { error: "Zu viele Anfragen. Bitte warte eine Minute und versuche es erneut." },
+        429,
+      );
+      response.headers.set("Retry-After", String(retryAfterSec));
+      return response;
+    }
+
     const body = (await request.json()) as ChatRequest;
     const message = body.message?.trim();
 

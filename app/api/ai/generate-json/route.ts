@@ -3,6 +3,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { buildArchitectureGeneratorPrompt } from "@/lib/ai/prompt";
 import { getAdminAuth, getAdminDb } from "@/lib/firebase/admin";
 import { FREE_CREDITS, CREDITS_PER_GENERATION } from "@/lib/firebase/credits";
+import { checkRateLimit, getRateLimitIdentifier } from "@/lib/firebase/rateLimit";
 
 interface GenerateJsonRequest {
   idea?: string;
@@ -129,8 +130,21 @@ export async function POST(request: Request) {
       return respond({ error: "Please provide an idea." }, 400);
     }
 
-    // Verify auth and check credits
+    // Verify auth
     const userId = await resolveUserId(request);
+
+    // Rate limit: 10 calls per minute per user/IP
+    const rateLimitId = getRateLimitIdentifier(request, userId);
+    const rateLimit = await checkRateLimit(rateLimitId);
+    if (!rateLimit.allowed) {
+      const retryAfterSec = Math.ceil(rateLimit.retryAfterMs / 1000);
+      const response = respond(
+        { error: "Zu viele Anfragen. Bitte warte eine Minute und versuche es erneut." },
+        429,
+      );
+      response.headers.set("Retry-After", String(retryAfterSec));
+      return response;
+    }
 
     if (userId) {
       const creditCheck = await ensureCredits(userId);
