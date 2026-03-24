@@ -57,10 +57,10 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex h-full flex-col gap-4">
 
         {/* ── 1. Architektur-Graph (volle Breite, obere Hälfte) ─────────── */}
-        <div className={cn(tile, "flex flex-col h-[480px]")}>
+        <div className={cn(tile, "flex flex-col flex-1 min-h-0")}>
           <div className="flex items-center gap-2 border-b border-white/6 px-5 py-3.5">
             <div className="rounded-lg bg-cyan-500/15 p-1.5">
               <Network className="h-4 w-4 text-cyan-400" />
@@ -74,10 +74,10 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         </div>
 
         {/* ── Untere Reihe: Kosten · Checkliste · Setup ─────────────────── */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid shrink-0 grid-cols-1 gap-4 md:grid-cols-3">
 
         {/* ── 2. Kostenabschätzung ──────────────────────────────────────── */}
-        <div className={cn(tile, "flex flex-col gap-4 p-5")}>
+        <div className={cn(tile, "flex max-h-56 flex-col gap-4 overflow-y-auto p-5")}>
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-emerald-500/15 p-1.5">
               <DollarSign className="h-4 w-4 text-emerald-400" />
@@ -109,7 +109,7 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         </div>
 
         {/* ── 3. Go-Live Checkliste ─────────────────────────────────────── */}
-        <div className={cn(tile, "flex flex-col gap-4 p-5")}>
+        <div className={cn(tile, "flex max-h-56 flex-col gap-4 overflow-y-auto p-5")}>
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-violet-500/15 p-1.5">
               <CheckSquare className="h-4 w-4 text-violet-400" />
@@ -160,7 +160,7 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         </div>
 
         {/* ── 4. Setup-Befehle (Terminal) ───────────────────────────────── */}
-        <div className={cn(tile, "flex flex-col gap-4 p-5")}>
+        <div className={cn(tile, "flex max-h-56 flex-col gap-4 overflow-y-auto p-5")}>
           <div className="flex items-center gap-2">
             <div className="rounded-lg bg-cyan-500/15 p-1.5">
               <Terminal className="h-4 w-4 text-cyan-400" />

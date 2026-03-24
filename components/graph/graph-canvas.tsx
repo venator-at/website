@@ -58,7 +58,7 @@ export function GraphCanvas({
 
     const timeoutId = window.setTimeout(() => {
       flowInstance.fitView({
-        padding: 0.2,
+        padding: 0.08,
         duration: 850,
       });
     }, 40);
@@ -138,6 +138,7 @@ export function GraphCanvas({
           onNodeClick={handleNodeClick}
           onInit={setFlowInstance}
           fitView
+          fitViewOptions={{ padding: 0.08 }}
           nodesDraggable
           nodesConnectable={false}
           elementsSelectable
