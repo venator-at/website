@@ -160,6 +160,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
   const [dashboardReady, setDashboardReady] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [infoExpanded, setInfoExpanded] = useState(false);
+  const [extrasLoading, setExtrasLoading] = useState(false);
 
   const firebaseConfigured = [
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -211,6 +212,39 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
         setGraphNodes(layouted.nodes);
         setGraphEdges(layouted.edges);
         setArchitectureInput(archInput);
+
+        // If any of the 3 extra sections are missing, fetch them from AI
+        const needsExtras =
+          !archInput.costEstimation || !archInput.goLiveChecklist?.length || !archInput.setupCommands?.length;
+
+        if (needsExtras) {
+          setExtrasLoading(true);
+          fetch("/api/ai/project-extras", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: p.prompt,
+              techStack: p.techStackArray,
+            }),
+          })
+            .then((res) => (res.ok ? res.json() : Promise.reject()))
+            .then((extras: { costEstimation?: ArchitectureInput["costEstimation"]; setupCommands?: string[]; goLiveChecklist?: string[] }) => {
+              setArchitectureInput((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      costEstimation: prev.costEstimation ?? extras.costEstimation,
+                      setupCommands: prev.setupCommands?.length ? prev.setupCommands : (extras.setupCommands ?? []),
+                      goLiveChecklist: prev.goLiveChecklist?.length ? prev.goLiveChecklist : (extras.goLiveChecklist ?? []),
+                    }
+                  : prev,
+              );
+            })
+            .catch(() => {
+              // Silent fail — the "Keine Daten" fallbacks will show
+            })
+            .finally(() => setExtrasLoading(false));
+        }
 
         window.setTimeout(() => setDashboardReady(true), 40);
       })
@@ -389,6 +423,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
               nodes={graphNodes}
               edges={graphEdges}
               architecture={architectureInput}
+              extrasLoading={extrasLoading}
             />
           </div>
         ) : (
