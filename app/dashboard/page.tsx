@@ -751,6 +751,7 @@ export default function DashboardPage() {
                   nodes={graphNodes}
                   edges={graphEdges}
                   onNodeSelect={handleNodeSelect}
+                  onEdgeSelect={() => {}}
                 />
               ) : (
                 <div className="flex h-full items-center justify-center rounded-2xl border border-cyan-400/20 bg-slate-900/60 text-sm text-slate-300">
