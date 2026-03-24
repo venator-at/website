@@ -161,6 +161,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
   const [loaded, setLoaded] = useState(false);
   const [infoExpanded, setInfoExpanded] = useState(false);
   const [extrasLoading, setExtrasLoading] = useState(false);
+  const [extrasError, setExtrasError] = useState("");
 
   const firebaseConfigured = [
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -227,7 +228,10 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
               techStack: p.techStackArray,
             }),
           })
-            .then((res) => (res.ok ? res.json() : Promise.reject()))
+            .then((res) => res.json().then((data: { userMessage?: string; costEstimation?: ArchitectureInput["costEstimation"]; setupCommands?: string[]; goLiveChecklist?: string[] }) => {
+              if (!res.ok) throw new Error(data.userMessage ?? "Fehler beim Laden der KI-Daten.");
+              return data;
+            }))
             .then((extras: { costEstimation?: ArchitectureInput["costEstimation"]; setupCommands?: string[]; goLiveChecklist?: string[] }) => {
               setArchitectureInput((prev) =>
                 prev
@@ -240,8 +244,9 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
                   : prev,
               );
             })
-            .catch(() => {
-              // Silent fail — the "Keine Daten" fallbacks will show
+            .catch((err: unknown) => {
+              const msg = err instanceof Error ? err.message : "Die KI-Daten konnten nicht geladen werden.";
+              setExtrasError(msg);
             })
             .finally(() => setExtrasLoading(false));
         }
@@ -408,6 +413,25 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
           <div className="mb-4 flex items-center gap-3 rounded-2xl border border-red-400/25 bg-red-500/10 px-6 py-4 text-red-200">
             <AlertTriangle className="h-5 w-5 shrink-0 text-red-400" />
             <span className="text-sm">{loadError}</span>
+          </div>
+        )}
+
+        {/* ── Extras error ─────────────────────────────────────────────────── */}
+        {extrasError && (
+          <div className="mb-4 flex items-start gap-3 rounded-2xl border border-amber-400/25 bg-amber-500/10 px-5 py-3.5 text-amber-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">KI-Details konnten nicht geladen werden</p>
+              <p className="mt-0.5 text-xs text-amber-300/70">{extrasError}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setExtrasError("")}
+              className="shrink-0 text-amber-400/60 transition-colors hover:text-amber-300"
+              aria-label="Schließen"
+            >
+              ✕
+            </button>
           </div>
         )}
 

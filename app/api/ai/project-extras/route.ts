@@ -6,6 +6,12 @@ interface ProjectExtrasRequest {
   projectType?: string;
 }
 
+interface ExtrasResult {
+  costEstimation?: { monthlyCost: string; description: string };
+  setupCommands: string[];
+  goLiveChecklist: string[];
+}
+
 function extractJsonFromText(text: string): string {
   const trimmed = text.trim();
   const codeBlockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -14,6 +20,65 @@ function extractJsonFromText(text: string): string {
   const lastBrace = trimmed.lastIndexOf("}");
   if (firstBrace >= 0 && lastBrace > firstBrace) return trimmed.slice(firstBrace, lastBrace + 1);
   return trimmed;
+}
+
+async function callGemini(aiPrompt: string, apiKey: string, model: string): Promise<ExtrasResult> {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: aiPrompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1024, topP: 0.9 },
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini HTTP ${response.status}: ${errorText}`);
+  }
+
+  const data = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+
+  const generatedText =
+    data.candidates?.[0]?.content?.parts
+      ?.map((p) => p.text ?? "")
+      .join("\n")
+      .trim() ?? "";
+
+  if (!generatedText) throw new Error("Gemini returned no output.");
+
+  const jsonText = extractJsonFromText(generatedText);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    throw new Error("Gemini output was not valid JSON.");
+  }
+
+  const obj = parsed as Record<string, unknown>;
+
+  const costEstimation =
+    typeof obj.costEstimation === "object" && obj.costEstimation !== null
+      ? {
+          monthlyCost: String((obj.costEstimation as Record<string, unknown>).monthlyCost ?? ""),
+          description: String((obj.costEstimation as Record<string, unknown>).description ?? ""),
+        }
+      : undefined;
+
+  const setupCommands = Array.isArray(obj.setupCommands)
+    ? obj.setupCommands.filter((c): c is string => typeof c === "string" && c.trim().length > 0)
+    : [];
+
+  const goLiveChecklist = Array.isArray(obj.goLiveChecklist)
+    ? obj.goLiveChecklist.filter((c): c is string => typeof c === "string" && c.trim().length > 0)
+    : [];
+
+  return { costEstimation, setupCommands, goLiveChecklist };
 }
 
 export async function POST(request: Request) {
@@ -35,7 +100,10 @@ export async function POST(request: Request) {
     const model = process.env.GOOGLE_AI_MODEL || "gemini-3-flash-preview";
 
     if (!apiKey) {
-      return NextResponse.json({ error: "Missing Google AI key." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Missing Google AI key.", userMessage: "KI-Konfiguration fehlt. Bitte kontaktiere den Support." },
+        { status: 500 },
+      );
     }
 
     const techStackLine = techStack.length > 0 ? `Tech Stack: ${techStack.join(", ")}` : "";
@@ -73,68 +141,36 @@ export async function POST(request: Request) {
       .filter(Boolean)
       .join("\n");
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    // Try up to 2 times before giving up
+    let lastError: string = "Unknown error";
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const result = await callGemini(aiPrompt, apiKey, model);
+        return NextResponse.json(result);
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err);
+        console.error(`[project-extras] Attempt ${attempt} failed:`, lastError);
+        // Small delay before retry
+        if (attempt < 2) await new Promise((r) => setTimeout(r, 800));
+      }
+    }
+
+    return NextResponse.json(
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: aiPrompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1024, topP: 0.9 },
-        }),
+        error: lastError,
+        userMessage:
+          "Die KI konnte die Projektdetails gerade nicht laden. Bitte lade die Seite neu oder versuche es später erneut.",
       },
+      { status: 502 },
     );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json(
-        { error: `Gemini request failed: ${response.status} ${errorText}` },
-        { status: 502 },
-      );
-    }
-
-    const data = (await response.json()) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-    };
-
-    const generatedText =
-      data.candidates?.[0]?.content?.parts
-        ?.map((p) => p.text ?? "")
-        .join("\n")
-        .trim() ?? "";
-
-    if (!generatedText) {
-      return NextResponse.json({ error: "Gemini returned no output." }, { status: 502 });
-    }
-
-    const jsonText = extractJsonFromText(generatedText);
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(jsonText);
-    } catch {
-      return NextResponse.json({ error: "Gemini output was not valid JSON.", raw: generatedText }, { status: 502 });
-    }
-
-    const obj = parsed as Record<string, unknown>;
-    const costEstimation =
-      typeof obj.costEstimation === "object" && obj.costEstimation !== null
-        ? {
-            monthlyCost: String((obj.costEstimation as Record<string, unknown>).monthlyCost ?? ""),
-            description: String((obj.costEstimation as Record<string, unknown>).description ?? ""),
-          }
-        : undefined;
-
-    const setupCommands = Array.isArray(obj.setupCommands)
-      ? obj.setupCommands.filter((c): c is string => typeof c === "string" && c.trim().length > 0)
-      : [];
-
-    const goLiveChecklist = Array.isArray(obj.goLiveChecklist)
-      ? obj.goLiveChecklist.filter((c): c is string => typeof c === "string" && c.trim().length > 0)
-      : [];
-
-    return NextResponse.json({ costEstimation, setupCommands, goLiveChecklist });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: message,
+        userMessage: "Ein unerwarteter Fehler ist aufgetreten. Bitte lade die Seite neu.",
+      },
+      { status: 500 },
+    );
   }
 }
