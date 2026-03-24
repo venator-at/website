@@ -77,97 +77,102 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         <div className="grid shrink-0 grid-cols-1 gap-4 md:grid-cols-3">
 
         {/* ── 2. Kostenabschätzung ──────────────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-56 flex-col gap-4 overflow-y-auto p-5")}>
-          <div className="flex items-center gap-2">
+        <div className={cn(tile, "flex max-h-56 flex-col")}>
+          <div className="flex shrink-0 items-center gap-2 px-5 pb-3 pt-5">
             <div className="rounded-lg bg-emerald-500/15 p-1.5">
               <DollarSign className="h-4 w-4 text-emerald-400" />
             </div>
             <span className="text-sm font-semibold text-slate-200">Kostenabschätzung</span>
             {extrasLoading && <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-slate-500" />}
           </div>
-          {extrasLoading ? (
-            <div className="flex flex-col gap-2 animate-pulse">
-              <div className="h-14 rounded-xl bg-white/5" />
-              <div className="h-3 w-3/4 rounded bg-white/5" />
-              <div className="h-3 w-1/2 rounded bg-white/5" />
-            </div>
-          ) : architecture.costEstimation ? (
-            <>
-              <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-center">
-                <p className="text-2xl font-bold text-emerald-300">
-                  {architecture.costEstimation.monthlyCost}
-                </p>
-                <p className="mt-0.5 text-xs text-slate-500">pro Monat</p>
+          <div className="flex flex-col gap-4 overflow-y-auto px-5 pb-5">
+            {extrasLoading ? (
+              <div className="flex flex-col gap-2 animate-pulse">
+                <div className="h-14 rounded-xl bg-white/5" />
+                <div className="h-3 w-3/4 rounded bg-white/5" />
+                <div className="h-3 w-1/2 rounded bg-white/5" />
               </div>
-              <p className="text-xs leading-relaxed text-slate-400">
-                {architecture.costEstimation.description}
-              </p>
-            </>
-          ) : (
-            <p className="text-xs text-slate-500">Keine Kostenschätzung verfügbar.</p>
-          )}
+            ) : architecture.costEstimation ? (
+              <>
+                <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-center">
+                  <p className="text-2xl font-bold text-emerald-300">
+                    {architecture.costEstimation.monthlyCost}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">pro Monat</p>
+                </div>
+                <p className="text-xs leading-relaxed text-slate-400">
+                  {architecture.costEstimation.description}
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-slate-500">Keine Kostenschätzung verfügbar.</p>
+            )}
+          </div>
         </div>
 
         {/* ── 3. Go-Live Checkliste ─────────────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-56 flex-col gap-4 overflow-y-auto p-5")}>
-          <div className="flex items-center gap-2">
+        <div className={cn(tile, "flex max-h-56 flex-col")}>
+          <div className="flex shrink-0 items-center gap-2 px-5 pb-3 pt-5">
             <div className="rounded-lg bg-violet-500/15 p-1.5">
               <CheckSquare className="h-4 w-4 text-violet-400" />
             </div>
             <span className="text-sm font-semibold text-slate-200">Go-Live Checkliste</span>
             {extrasLoading && <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-slate-500" />}
           </div>
-          {extrasLoading ? (
-            <div className="flex flex-col gap-2.5 animate-pulse">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2.5">
-                  <div className="h-4 w-4 shrink-0 rounded border border-white/10 bg-white/5" />
-                  <div className="h-3 rounded bg-white/5" style={{ width: `${60 + (i % 3) * 15}%` }} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <ul className="flex flex-col gap-2.5">
-              {(architecture.goLiveChecklist ?? []).map((item, i) => (
-                <li key={i} className="flex items-start gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => toggleChecked(i)}
-                    className={cn(
-                      "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
-                      checkedItems.has(i)
-                        ? "border-violet-400 bg-violet-400/25"
-                        : "border-white/20 bg-white/4 hover:border-violet-400/60",
-                    )}
-                  >
-                    {checkedItems.has(i) && <Check className="h-2.5 w-2.5 text-violet-300" />}
-                  </button>
-                  <span
-                    className={cn(
-                      "text-xs leading-relaxed text-slate-300 transition-colors",
-                      checkedItems.has(i) && "text-slate-600 line-through",
-                    )}
-                  >
-                    {item}
-                  </span>
-                </li>
-              ))}
-              {!architecture.goLiveChecklist?.length && (
-                <p className="text-xs text-slate-500">Keine Einträge verfügbar.</p>
-              )}
-            </ul>
-          )}
+          <div className="overflow-y-auto px-5 pb-5">
+            {extrasLoading ? (
+              <div className="flex flex-col gap-2.5 animate-pulse">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <div className="h-4 w-4 shrink-0 rounded border border-white/10 bg-white/5" />
+                    <div className="h-3 rounded bg-white/5" style={{ width: `${60 + (i % 3) * 15}%` }} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ul className="flex flex-col gap-2.5">
+                {(architecture.goLiveChecklist ?? []).map((item, i) => (
+                  <li key={i} className="flex items-start gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => toggleChecked(i)}
+                      className={cn(
+                        "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
+                        checkedItems.has(i)
+                          ? "border-violet-400 bg-violet-400/25"
+                          : "border-white/20 bg-white/4 hover:border-violet-400/60",
+                      )}
+                    >
+                      {checkedItems.has(i) && <Check className="h-2.5 w-2.5 text-violet-300" />}
+                    </button>
+                    <span
+                      className={cn(
+                        "text-xs leading-relaxed text-slate-300 transition-colors",
+                        checkedItems.has(i) && "text-slate-600 line-through",
+                      )}
+                    >
+                      {item}
+                    </span>
+                  </li>
+                ))}
+                {!architecture.goLiveChecklist?.length && (
+                  <p className="text-xs text-slate-500">Keine Einträge verfügbar.</p>
+                )}
+              </ul>
+            )}
+          </div>
         </div>
 
         {/* ── 4. Setup-Befehle (Terminal) ───────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-56 flex-col gap-4 overflow-y-auto p-5")}>
-          <div className="flex items-center gap-2">
+        <div className={cn(tile, "flex max-h-56 flex-col")}>
+          <div className="flex shrink-0 items-center gap-2 px-5 pb-3 pt-5">
             <div className="rounded-lg bg-cyan-500/15 p-1.5">
               <Terminal className="h-4 w-4 text-cyan-400" />
             </div>
             <span className="text-sm font-semibold text-slate-200">Setup-Befehle</span>
             {extrasLoading && <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-slate-500" />}
           </div>
+          <div className="overflow-y-auto px-5 pb-5">
           <div className="overflow-hidden rounded-xl border border-white/8 bg-slate-950/80">
             {/* Terminal title bar */}
             <div className="flex items-center gap-1.5 border-b border-white/6 px-4 py-2">
@@ -214,6 +219,7 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
               )}
             </div>
           </div>
+          </div>{/* end overflow-y-auto */}
         </div>
 
 
