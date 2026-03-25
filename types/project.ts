@@ -9,6 +9,7 @@ export interface Project {
   techStackArray: string[];
   componentCount: number;
   architectureJson?: string;
+  checklistChecked?: number[];
   createdAt: Date;
   updatedAt: Date;
 }

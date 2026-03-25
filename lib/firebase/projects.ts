@@ -8,6 +8,7 @@ import {
   where,
   onSnapshot,
   serverTimestamp,
+  updateDoc,
   type Unsubscribe,
   Timestamp,
 } from "firebase/firestore";
@@ -24,6 +25,9 @@ function fromFirestore(id: string, data: Record<string, unknown>): Project {
     techStackArray: (data.techStackArray as string[]) ?? [],
     componentCount: (data.componentCount as number) ?? 0,
     architectureJson: typeof data.architectureJson === "string" ? data.architectureJson : undefined,
+    checklistChecked: Array.isArray(data.checklistChecked)
+      ? (data.checklistChecked as number[])
+      : undefined,
     createdAt:
       data.createdAt instanceof Timestamp
         ? data.createdAt.toDate()
@@ -50,6 +54,16 @@ export async function createProject(input: ProjectCreateInput): Promise<string> 
     updatedAt: serverTimestamp(),
   });
   return ref.id;
+}
+
+export async function saveChecklistChecked(
+  projectId: string,
+  checkedIndices: number[],
+): Promise<void> {
+  if (!db) return;
+  await updateDoc(doc(db, "projects", projectId), {
+    checklistChecked: checkedIndices,
+  });
 }
 
 export async function deleteProject(projectId: string): Promise<void> {

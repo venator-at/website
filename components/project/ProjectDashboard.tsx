@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   CheckSquare,
   Check,
@@ -12,6 +12,7 @@ import {
 import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { ComponentDetailsSheet } from "@/components/panels/component-details-sheet";
 import { ConnectionDetailsSheet } from "@/components/panels/connection-details-sheet";
+import { saveChecklistChecked } from "@/lib/firebase/projects";
 import { cn } from "@/lib/utils";
 import type {
   ArchitectureComponentInput,
@@ -21,19 +22,31 @@ import type {
 } from "@/types/architecture";
 
 interface ProjectDashboardProps {
+  projectId: string;
   nodes: ArchitectureNode[];
   edges: ArchitectureEdge[];
   architecture: ArchitectureInput;
   extrasLoading?: boolean;
+  initialCheckedItems?: number[];
 }
 
-export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: ProjectDashboardProps) {
+export function ProjectDashboard({
+  projectId,
+  nodes,
+  edges,
+  architecture,
+  extrasLoading,
+  initialCheckedItems,
+}: ProjectDashboardProps) {
   const [selectedComponent, setSelectedComponent] = useState<ArchitectureComponentInput | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedEdge, setSelectedEdge] = useState<ArchitectureEdge | null>(null);
   const [connectionOpen, setConnectionOpen] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [checkedItems, setCheckedItems] = useState<Set<number>>(new Set());
+  const [checkedItems, setCheckedItems] = useState<Set<number>>(
+    new Set(initialCheckedItems ?? []),
+  );
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
     setSelectedComponent(component);
@@ -56,6 +69,13 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
       const next = new Set(prev);
       if (next.has(index)) next.delete(index);
       else next.add(index);
+
+      // Debounce-save to Firebase
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = setTimeout(() => {
+        void saveChecklistChecked(projectId, Array.from(next));
+      }, 600);
+
       return next;
     });
   };
@@ -79,7 +99,7 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         <div className="grid shrink-0 grid-cols-1 gap-4 md:grid-cols-3">
 
         {/* ── 2. Kostenabschätzung ──────────────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-64 flex-col")}>
+        <div className={cn(tile, "flex max-h-48 flex-col")}>
           <div className="flex shrink-0 items-center gap-2 border-b border-white/6 px-5 py-3.5">
             <div className="rounded-lg bg-emerald-500/15 p-1.5">
               <DollarSign className="h-4 w-4 text-emerald-400" />
@@ -113,7 +133,7 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         </div>
 
         {/* ── 3. Go-Live Checkliste ─────────────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-64 flex-col")}>
+        <div className={cn(tile, "flex max-h-48 flex-col")}>
           <div className="flex shrink-0 items-center gap-2 border-b border-white/6 px-5 py-3.5">
             <div className="rounded-lg bg-violet-500/15 p-1.5">
               <CheckSquare className="h-4 w-4 text-violet-400" />
@@ -166,7 +186,7 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         </div>
 
         {/* ── 4. Setup-Befehle (Terminal) ───────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-64 flex-col")}>
+        <div className={cn(tile, "flex max-h-48 flex-col")}>
           <div className="flex shrink-0 items-center gap-2 border-b border-white/6 px-5 py-3.5">
             <div className="rounded-lg bg-cyan-500/15 p-1.5">
               <Terminal className="h-4 w-4 text-cyan-400" />

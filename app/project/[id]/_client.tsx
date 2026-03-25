@@ -456,10 +456,12 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
             )}
           >
             <ProjectDashboard
+              projectId={projectId}
               nodes={graphNodes}
               edges={graphEdges}
               architecture={architectureInput}
               extrasLoading={extrasLoading}
+              initialCheckedItems={project?.checklistChecked}
             />
           </div>
         ) : (
