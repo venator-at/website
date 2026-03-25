@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
@@ -26,7 +27,7 @@ import {
 import { updateProfile, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { useAuth } from "@/contexts/AuthContext";
-import { saveUserProfile } from "@/lib/firebase/users";
+import { saveUserProfile, uploadUserAvatar } from "@/lib/firebase/users";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { GlowInput } from "@/components/ui/glow-input";
 import { cn } from "@/lib/utils";
@@ -139,6 +140,14 @@ function ProfileSection({
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState("");
   const [avatarHover, setAvatarHover] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [localPhotoURL, setLocalPhotoURL] = useState<string | null>(user?.photoURL ?? null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLocalPhotoURL(user?.photoURL ?? null);
+  }, [user?.photoURL]);
 
   useEffect(() => {
     if (storedFirstName) {
@@ -149,6 +158,27 @@ function ProfileSection({
       setLastName(parts.slice(1).join(" "));
     }
   }, [storedFirstName, user]);
+
+  async function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !auth?.currentUser) return;
+    setUploadError("");
+    setIsUploadingAvatar(true);
+    try {
+      const downloadURL = await uploadUserAvatar(user.uid, file);
+      await Promise.all([
+        updateProfile(auth.currentUser, { photoURL: downloadURL }),
+        saveUserProfile(user.uid, firstName.trim() || user.displayName?.split(" ")[0] ?? "", downloadURL),
+      ]);
+      setLocalPhotoURL(downloadURL);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload fehlgeschlagen.");
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset input so the same file can be re-selected if needed
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -187,26 +217,56 @@ function ProfileSection({
       <div className="rounded-2xl border border-white/[0.07] bg-slate-900/50 backdrop-blur-sm overflow-hidden">
         {/* Avatar row */}
         <div className="p-6 flex items-center gap-5 border-b border-white/[0.05]">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={handleAvatarFileChange}
+            aria-label="Profilbild hochladen"
+          />
+
           <div
             className="relative cursor-pointer shrink-0"
+            onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
             onMouseEnter={() => setAvatarHover(true)}
             onMouseLeave={() => setAvatarHover(false)}
+            title="Profilbild ändern"
           >
             <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 opacity-40 blur-sm" />
             <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center overflow-hidden">
-              <span className="text-xl font-bold text-white">{initial}</span>
+              {localPhotoURL ? (
+                <Image
+                  src={localPhotoURL}
+                  alt="Profilbild"
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                  unoptimized
+                />
+              ) : (
+                <span className="text-xl font-bold text-white">{initial}</span>
+              )}
               <div
                 className={cn(
                   "absolute inset-0 flex flex-col items-center justify-center gap-0.5",
                   "bg-black/60 backdrop-blur-sm rounded-full transition-opacity duration-200",
-                  avatarHover ? "opacity-100" : "opacity-0",
+                  isUploadingAvatar || avatarHover ? "opacity-100" : "opacity-0",
                 )}
               >
-                <Camera className="w-4 h-4 text-white" />
-                <span className="text-[9px] font-medium text-white/80">ändern</span>
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                ) : (
+                  <>
+                    <Camera className="w-4 h-4 text-white" />
+                    <span className="text-[9px] font-medium text-white/80">ändern</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
+
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-100 truncate">{displayName}</p>
             <p className="text-xs text-slate-500 mt-0.5 truncate">{user?.email}</p>
@@ -216,6 +276,15 @@ function ProfileSection({
             </div>
           </div>
         </div>
+
+        {/* Avatar upload error */}
+        {uploadError && (
+          <div className="px-6 pt-4">
+            <p className="rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
+              {uploadError}
+            </p>
+          </div>
+        )}
 
         {/* Form */}
         <div className="p-6">

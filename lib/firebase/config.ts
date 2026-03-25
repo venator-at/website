@@ -5,6 +5,7 @@ import {
   initializeFirestore,
   type Firestore,
 } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -27,10 +28,12 @@ const hasCompleteFirebaseConfig = [
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
+let storage: FirebaseStorage | undefined;
 
 if (typeof window !== "undefined" && hasCompleteFirebaseConfig) {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
   auth = getAuth(app);
+  storage = getStorage(app);
 
   // Prefer a transport fallback that behaves better on restrictive networks.
   // If Firestore is already initialized (e.g. HMR), gracefully reuse it.
@@ -43,5 +46,5 @@ if (typeof window !== "undefined" && hasCompleteFirebaseConfig) {
   }
 }
 
-export { auth, db };
+export { auth, db, storage };
 export default app;
