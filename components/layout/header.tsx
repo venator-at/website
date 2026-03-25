@@ -5,8 +5,6 @@ import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, Zap } from "lucide-react";
 
-// TODO: Replace isLoggedIn with real Supabase session check when auth is wired up
-// e.g. const { data: { session } } = await supabase.auth.getSession()
 interface SiteHeaderProps {
   isLoggedIn?: boolean;
 }

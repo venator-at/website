@@ -66,9 +66,9 @@ Eine Webanwendung, die Anfänger und Junior-Entwickler dabei unterstützt, kompl
 | UI-Komponenten | shadcn/ui |
 | KI-Integration | Anthropic Claude API (claude-sonnet-4-5 oder neuer) |
 | Graph-Visualisierung | React Flow (`@xyflow/react`) |
-| Authentifizierung | Supabase Auth |
-| Datenbank | Supabase (PostgreSQL) |
-| ORM | Supabase JS Client (kein Prisma initially) |
+| Authentifizierung | Firebase Auth |
+| Datenbank | Firebase Firestore (NoSQL) |
+| DB Client | Firebase JS SDK + Firebase Admin SDK |
 | Hosting | Vercel |
 | State Management | Zustand oder React Context (minimal) |
 | Formulare | React Hook Form + Zod |
@@ -110,9 +110,13 @@ Eine Webanwendung, die Anfänger und Junior-Entwickler dabei unterstützt, kompl
 │   ├── ai/
 │   │   ├── prompts.ts        # System-Prompts für Claude
 │   │   └── analyzer.ts       # Anthropic SDK Wrapper
-│   ├── supabase/
-│   │   ├── client.ts
-│   │   └── server.ts
+│   ├── firebase/
+│   │   ├── config.ts
+│   │   ├── admin.ts
+│   │   ├── auth.ts
+│   │   ├── projects.ts
+│   │   ├── users.ts
+│   │   └── rateLimit.ts
 │   └── utils.ts
 ├── types/
 │   ├── project.ts
@@ -124,40 +128,38 @@ Eine Webanwendung, die Anfänger und Junior-Entwickler dabei unterstützt, kompl
 
 ---
 
-## Datenmodell (Supabase)
+## Datenmodell (Firebase Firestore)
 
-### `projects`
-```sql
-id          uuid PRIMARY KEY
-user_id     uuid REFERENCES auth.users
-title       text NOT NULL
-description text NOT NULL
-project_type text  -- 'web-app' | 'api' | 'mobile' | 'saas' | etc.
-experience_level text  -- 'beginner' | 'junior' | 'mid'
-budget_level text  -- 'free' | 'low' | 'medium' | 'high'
-created_at  timestamptz
-updated_at  timestamptz
+### Collection `projects`
+```
+id            string (auto)
+userId        string (Firebase Auth UID)
+title         string
+description   string
+projectType   string  -- 'web-app' | 'api' | 'mobile' | 'saas' | etc.
+experienceLevel string  -- 'beginner' | 'junior' | 'mid'
+budgetLevel   string  -- 'free' | 'low' | 'medium' | 'high'
+createdAt     timestamp
+updatedAt     timestamp
 ```
 
-### `architecture_decisions`
-```sql
-id          uuid PRIMARY KEY
-project_id  uuid REFERENCES projects
-component   text  -- 'backend' | 'database' | 'hosting' | etc.
-chosen_option text  -- gewählte Technologie
-reasoning   text  -- Begründung (von KI generiert)
-alternatives jsonb  -- Array der anderen Optionen
-created_at  timestamptz
+### Collection `projects/{id}/decisions` (subcollection)
+```
+id            string (auto)
+component     string  -- 'backend' | 'database' | 'hosting' | etc.
+chosenOption  string  -- gewählte Technologie
+reasoning     string  -- Begründung (von KI generiert)
+alternatives  array   -- Array der anderen Optionen
+createdAt     timestamp
 ```
 
-### `architecture_graphs`
-```sql
-id          uuid PRIMARY KEY
-project_id  uuid REFERENCES projects
-nodes       jsonb  -- React Flow Node-Array
-edges       jsonb  -- React Flow Edge-Array
-created_at  timestamptz
-updated_at  timestamptz
+### Collection `projects/{id}/graphs` (subcollection)
+```
+id            string (auto)
+nodes         array   -- React Flow Node-Array
+edges         array   -- React Flow Edge-Array
+createdAt     timestamp
+updatedAt     timestamp
 ```
 
 ---
@@ -201,9 +203,15 @@ updated_at  timestamptz
 ## Umgebungsvariablen (`.env.local`)
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+FIREBASE_ADMIN_PROJECT_ID=
+FIREBASE_ADMIN_CLIENT_EMAIL=
+FIREBASE_ADMIN_PRIVATE_KEY=
 ANTHROPIC_API_KEY=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
@@ -213,14 +221,14 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ## Entwicklungsreihenfolge (empfohlen)
 
 1. **Setup**: Next.js + TypeScript + Tailwind + shadcn/ui initialisieren
-2. **Auth**: Supabase Auth mit Login/Signup-Flows
+2. **Auth**: Firebase Auth mit Login/Signup-Flows
 3. **Landing Page**: Marketing-Seite mit CTA
 4. **Wizard – Schritt 1**: Projekt-Eingabe (Beschreibung, Typ, Level)
 5. **KI-Analyse**: Claude API Integration, erstes Prompt-Engineering
 6. **Komponentenauswahl**: Wizard-Steps für jede Architekturkomponente
 7. **Empfehlungskarten**: UI für Optionen mit Pros/Cons
 8. **Graph-Visualisierung**: React Flow Integration
-9. **Projekt speichern**: Supabase CRUD
+9. **Projekt speichern**: Firebase Firestore CRUD
 10. **Dashboard**: Übersicht gespeicherter Architekturen
 11. **Export-Funktion**: Markdown / PNG Download
 12. **Polish**: Animationen, Error States, Loading States
@@ -242,8 +250,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## Bekannte Einschränkungen / Entscheidungen
 
-- **Kein Prisma** initial — Supabase JS Client reicht für MVP
-- **Kein Redis** — Supabase Realtime und Edge-Caching über Vercel ausreichend
-- **Kein Custom Auth** — Supabase Auth abdeckt alle Anforderungen
+- **Kein Prisma / kein SQL** — Firebase Firestore (NoSQL) abdeckt alle Anforderungen
+- **Kein Redis** — Firebase Firestore + Vercel Edge-Caching ausreichend
+- **Kein Custom Auth** — Firebase Auth abdeckt alle Anforderungen
 - **React Flow** statt D3.js — bessere React-Integration, ausreichend für Use Case
 - KI-Antworten werden **gecacht per Project-ID** um API-Kosten zu minimieren
