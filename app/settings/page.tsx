@@ -26,6 +26,7 @@ import {
 import { updateProfile, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { saveUserProfile } from "@/lib/firebase/users";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
 import { GlowInput } from "@/components/ui/glow-input";
@@ -278,8 +279,7 @@ const ACCENT_COLORS = [
 ] as const;
 
 function AppearanceSection() {
-  const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
-  const [accent, setAccent] = useState<string>("violet");
+  const { theme, accent, setTheme, setAccent } = useTheme();
 
   return (
     <div>
