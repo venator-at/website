@@ -28,6 +28,7 @@ interface GraphCanvasProps {
   edges: ArchitectureEdge[];
   onNodeSelect: (component: ArchitectureComponentInput) => void;
   onEdgeSelect: (edge: ArchitectureEdge) => void;
+  nodeCount?: number;
 }
 
 const nodeTypes = {
@@ -39,6 +40,7 @@ export function GraphCanvas({
   edges,
   onNodeSelect,
   onEdgeSelect,
+  nodeCount,
 }: GraphCanvasProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [flowInstance, setFlowInstance] = useState<ReactFlowInstance<ArchitectureNode, ArchitectureEdge> | null>(null);
@@ -123,8 +125,12 @@ export function GraphCanvas({
       <div className="relative flex items-center justify-between gap-3 border-b border-slate-700/70 bg-slate-950/45 px-4 py-3 backdrop-blur">
         <div>
           <h2 className="text-sm font-bold uppercase tracking-wide text-slate-100">Architecture Graph</h2>
-          <p className="text-xs text-slate-300">
-            Drag, zoom, and inspect nodes. Click a node for full component details.
+          <p className="text-xs text-slate-400">
+            {nodeCount != null ? (
+              <><span className="text-slate-300 font-medium">{nodeCount} components</span> · drag, zoom &amp; click to inspect</>
+            ) : (
+              "Drag, zoom, and inspect nodes. Click a node for full component details."
+            )}
           </p>
         </div>
         <ExportActions

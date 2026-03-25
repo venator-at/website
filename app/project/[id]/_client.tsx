@@ -308,40 +308,44 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
       <main className="flex flex-1 flex-col overflow-hidden px-4 pb-3 pt-3">
         {/* ── Top bar ──────────────────────────────────────────────────────── */}
-        <div className="mb-4 flex items-start justify-between gap-4">
+        <div className="mb-4 flex items-center justify-between gap-4">
           {/* Left: back + title */}
-          <div className="flex min-w-0 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-col gap-1">
             <Link
               href="/dashboard"
-              className="mb-1 flex items-center gap-1 text-xs text-slate-500 transition-colors hover:text-slate-300"
+              className="flex w-fit items-center gap-1.5 text-xs text-slate-500 transition-colors hover:text-slate-300"
             >
               <ArrowLeft className="h-3 w-3" />
               Dashboard
             </Link>
             {project ? (
               <>
-                <h1 className="truncate text-xl font-bold tracking-tight text-slate-50">
+                <h1 className="truncate text-2xl font-bold tracking-tight text-slate-50">
                   {project.title}
                 </h1>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
                   <span className="flex items-center gap-1">
                     <Layers className="h-3 w-3" />
                     {project.componentCount} Komponenten
                   </span>
+                  <span className="h-3 w-px bg-slate-700" />
                   <span className="flex items-center gap-1">
                     <CalendarDays className="h-3 w-3" />
                     {formatDate(project.createdAt)}
                   </span>
                   {loadError && (
-                    <span className="flex items-center gap-1 text-amber-400">
-                      <AlertTriangle className="h-3 w-3" />
-                      {loadError}
-                    </span>
+                    <>
+                      <span className="h-3 w-px bg-slate-700" />
+                      <span className="flex items-center gap-1 text-amber-400">
+                        <AlertTriangle className="h-3 w-3" />
+                        {loadError}
+                      </span>
+                    </>
                   )}
                 </div>
               </>
             ) : (
-              <h1 className="text-xl font-bold text-slate-50">Projekt</h1>
+              <h1 className="text-2xl font-bold text-slate-50">Projekt</h1>
             )}
           </div>
 
@@ -351,7 +355,12 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
               <button
                 type="button"
                 onClick={() => setInfoExpanded((v) => !v)}
-                className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-white/8 hover:text-slate-200"
+                className={cn(
+                  "flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-all",
+                  infoExpanded
+                    ? "border-slate-600 bg-slate-800 text-slate-200"
+                    : "border-slate-700/60 bg-slate-900/60 text-slate-400 hover:border-slate-600 hover:bg-slate-800/80 hover:text-slate-200",
+                )}
               >
                 <FileText className="h-3.5 w-3.5" />
                 Info
@@ -364,7 +373,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
             )}
             <Link
               href="/new"
-              className="flex items-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-500/15 px-3 py-1.5 text-xs font-medium text-cyan-300 transition-colors hover:border-cyan-400/60 hover:bg-cyan-500/25"
+              className="flex items-center gap-1.5 rounded-xl border border-cyan-400/40 bg-cyan-500/15 px-3 py-1.5 text-xs font-medium text-cyan-300 transition-all hover:border-cyan-400/60 hover:bg-cyan-500/25"
             >
               + Neues Projekt
             </Link>
@@ -373,11 +382,11 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
         {/* ── Info panel (collapsible) ──────────────────────────────────────── */}
         {project && infoExpanded && (
-          <div className="mb-4 overflow-hidden rounded-2xl border border-white/8 bg-slate-900/60 backdrop-blur-sm">
-            <div className="grid grid-cols-1 gap-0 divide-y divide-white/6 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+          <div className="mb-4 overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/70 backdrop-blur-sm">
+            <div className="grid grid-cols-1 divide-y divide-slate-800 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
               {/* Prompt */}
-              <div className="px-4 py-3">
-                <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-400">
+              <div className="px-5 py-4">
+                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   <FileText className="h-3 w-3" />
                   Projektbeschreibung
                 </p>
@@ -385,10 +394,13 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
               </div>
 
               {/* Tech stack */}
-              <div className="px-4 py-3">
-                <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-slate-400">
+              <div className="px-5 py-4">
+                <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                   <Cpu className="h-3 w-3" />
-                  Tech Stack ({project.techStackArray.length})
+                  Tech Stack
+                  <span className="ml-0.5 rounded-md border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[10px] normal-case tracking-normal text-slate-400">
+                    {project.techStackArray.length}
+                  </span>
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {project.techStackArray.map((tech) => (

@@ -7,7 +7,6 @@ import {
   Copy,
   DollarSign,
   Loader2,
-  Network,
   Terminal,
 } from "lucide-react";
 import { GraphCanvas } from "@/components/graph/graph-canvas";
@@ -68,32 +67,27 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
       <div className="flex h-full flex-col gap-4">
 
         {/* ── 1. Architektur-Graph (volle Breite, obere Hälfte) ─────────── */}
-        <div className={cn(tile, "flex flex-col flex-1 min-h-0")}>
-          <div className="flex items-center gap-2 border-b border-white/6 px-5 py-3.5">
-            <div className="rounded-lg bg-cyan-500/15 p-1.5">
-              <Network className="h-4 w-4 text-cyan-400" />
-            </div>
-            <span className="text-sm font-semibold text-slate-200">Architektur-Graph</span>
-            <span className="ml-auto text-xs text-slate-500">{nodes.length} Komponenten</span>
-          </div>
-          <div className="flex-1 min-h-0 flex flex-col">
-            <GraphCanvas nodes={nodes} edges={edges} onNodeSelect={handleNodeSelect} onEdgeSelect={handleEdgeSelect} />
-          </div>
-        </div>
+        <GraphCanvas
+          nodes={nodes}
+          edges={edges}
+          onNodeSelect={handleNodeSelect}
+          onEdgeSelect={handleEdgeSelect}
+          nodeCount={nodes.length}
+        />
 
         {/* ── Untere Reihe: Kosten · Checkliste · Setup ─────────────────── */}
         <div className="grid shrink-0 grid-cols-1 gap-4 md:grid-cols-3">
 
         {/* ── 2. Kostenabschätzung ──────────────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-56 flex-col")}>
-          <div className="flex shrink-0 items-center gap-2 px-5 pb-3 pt-5">
+        <div className={cn(tile, "flex max-h-64 flex-col")}>
+          <div className="flex shrink-0 items-center gap-2 border-b border-white/6 px-5 py-3.5">
             <div className="rounded-lg bg-emerald-500/15 p-1.5">
               <DollarSign className="h-4 w-4 text-emerald-400" />
             </div>
             <span className="text-sm font-semibold text-slate-200">Kostenabschätzung</span>
             {extrasLoading && <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-slate-500" />}
           </div>
-          <div className="flex flex-col gap-4 overflow-y-auto px-5 pb-5">
+          <div className="flex flex-col gap-4 overflow-y-auto px-5 py-4">
             {extrasLoading ? (
               <div className="flex flex-col gap-2 animate-pulse">
                 <div className="h-14 rounded-xl bg-white/5" />
@@ -119,15 +113,15 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         </div>
 
         {/* ── 3. Go-Live Checkliste ─────────────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-56 flex-col")}>
-          <div className="flex shrink-0 items-center gap-2 px-5 pb-3 pt-5">
+        <div className={cn(tile, "flex max-h-64 flex-col")}>
+          <div className="flex shrink-0 items-center gap-2 border-b border-white/6 px-5 py-3.5">
             <div className="rounded-lg bg-violet-500/15 p-1.5">
               <CheckSquare className="h-4 w-4 text-violet-400" />
             </div>
             <span className="text-sm font-semibold text-slate-200">Go-Live Checkliste</span>
             {extrasLoading && <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-slate-500" />}
           </div>
-          <div className="overflow-y-auto px-5 pb-5">
+          <div className="overflow-y-auto px-5 py-4">
             {extrasLoading ? (
               <div className="flex flex-col gap-2.5 animate-pulse">
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -172,15 +166,15 @@ export function ProjectDashboard({ nodes, edges, architecture, extrasLoading }: 
         </div>
 
         {/* ── 4. Setup-Befehle (Terminal) ───────────────────────────────── */}
-        <div className={cn(tile, "flex max-h-56 flex-col")}>
-          <div className="flex shrink-0 items-center gap-2 px-5 pb-3 pt-5">
+        <div className={cn(tile, "flex max-h-64 flex-col")}>
+          <div className="flex shrink-0 items-center gap-2 border-b border-white/6 px-5 py-3.5">
             <div className="rounded-lg bg-cyan-500/15 p-1.5">
               <Terminal className="h-4 w-4 text-cyan-400" />
             </div>
             <span className="text-sm font-semibold text-slate-200">Setup-Befehle</span>
             {extrasLoading && <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-slate-500" />}
           </div>
-          <div className="overflow-y-auto px-5 pb-5">
+          <div className="overflow-y-auto px-5 py-4">
           <div className="overflow-hidden rounded-xl border border-white/8 bg-slate-950/80">
             {/* Terminal title bar */}
             <div className="flex items-center gap-1.5 border-b border-white/6 px-4 py-2">
