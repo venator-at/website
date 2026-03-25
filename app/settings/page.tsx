@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2,
   LogOut,
   Save,
   Check,
-  Mail,
-  Shield,
   User,
   Palette,
   Bell,
@@ -22,7 +21,7 @@ import {
   Moon,
   Monitor,
   Trash2,
-  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { updateProfile, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
@@ -44,6 +43,87 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "billing", label: "Abrechnung", icon: CreditCard },
   { id: "danger", label: "Danger Zone", icon: AlertTriangle },
 ];
+
+// ─── Shared: Section header ───────────────────────────────────────────────────
+
+function SectionHeader({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-5">
+      <h2 className="text-sm font-semibold text-slate-200">{title}</h2>
+      <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+    </div>
+  );
+}
+
+// ─── Shared: Settings row ─────────────────────────────────────────────────────
+
+function SettingsRow({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <div className="shrink-0">
+        <p className="text-sm font-medium text-slate-200">{label}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  );
+}
+
+// ─── Shared: Danger row ───────────────────────────────────────────────────────
+
+function DangerRow({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="p-5 flex items-center justify-between gap-4">
+      <div>
+        <p className="text-sm font-medium text-slate-200">{label}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+      </div>
+      <div className="shrink-0">{children}</div>
+    </div>
+  );
+}
+
+// ─── Shared: Save button ──────────────────────────────────────────────────────
+
+function SaveButton({ state }: { state: "idle" | "saving" | "saved" | "error" }) {
+  return (
+    <button
+      type="submit"
+      disabled={state === "saving"}
+      className={cn(
+        "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium",
+        "transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed",
+        state === "saved"
+          ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
+          : "bg-gradient-to-r from-violet-600 to-violet-500 hover:opacity-90 text-white shadow-[0_0_20px_rgba(139,92,246,0.2)]",
+      )}
+    >
+      {state === "saved" ? (
+        <><Check className="w-3.5 h-3.5" /> Gespeichert</>
+      ) : state === "saving" ? (
+        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Speichern…</>
+      ) : (
+        <><Save className="w-3.5 h-3.5" /> Speichern</>
+      )}
+    </button>
+  );
+}
 
 // ─── Section: Profile ─────────────────────────────────────────────────────────
 
@@ -98,52 +178,48 @@ function ProfileSection({
   const displayName = user?.displayName ?? user?.email?.split("@")[0] ?? "Unbekannt";
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-base font-semibold text-white">Profil</h2>
-        <p className="text-sm text-white/40 mt-0.5">Verwalte deine persönlichen Informationen</p>
-      </div>
+    <div>
+      <SectionHeader
+        title="Profil"
+        description="Verwalte deine persönlichen Informationen"
+      />
 
-      {/* Glass card */}
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-        <div className="p-6">
-          {/* Avatar area */}
-          <div className="flex items-center gap-5 mb-8 pb-6 border-b border-white/[0.05]">
-            <div
-              className="relative cursor-pointer"
-              onMouseEnter={() => setAvatarHover(true)}
-              onMouseLeave={() => setAvatarHover(false)}
-            >
-              {/* Glow ring */}
-              <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-violet-500 via-violet-400 to-indigo-500 opacity-50 blur-sm" />
-              {/* Avatar */}
-              <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center overflow-hidden">
-                <span className="text-2xl font-bold text-white">{initial}</span>
-                {/* Hover overlay */}
-                <div
-                  className={cn(
-                    "absolute inset-0 flex flex-col items-center justify-center gap-1",
-                    "bg-black/60 backdrop-blur-sm rounded-full transition-opacity duration-200",
-                    avatarHover ? "opacity-100" : "opacity-0",
-                  )}
-                >
-                  <Camera className="w-4 h-4 text-white" />
-                  <span className="text-[9px] font-medium text-white/80 leading-none">Foto ändern</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-white">{displayName}</p>
-              <p className="text-xs text-white/40 mt-0.5">{user?.email}</p>
-              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                <span className="text-[10px] font-medium text-violet-300">Free Plan</span>
+      <div className="rounded-2xl border border-white/[0.07] bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+        {/* Avatar row */}
+        <div className="p-6 flex items-center gap-5 border-b border-white/[0.05]">
+          <div
+            className="relative cursor-pointer shrink-0"
+            onMouseEnter={() => setAvatarHover(true)}
+            onMouseLeave={() => setAvatarHover(false)}
+          >
+            <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 opacity-40 blur-sm" />
+            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center overflow-hidden">
+              <span className="text-xl font-bold text-white">{initial}</span>
+              <div
+                className={cn(
+                  "absolute inset-0 flex flex-col items-center justify-center gap-0.5",
+                  "bg-black/60 backdrop-blur-sm rounded-full transition-opacity duration-200",
+                  avatarHover ? "opacity-100" : "opacity-0",
+                )}
+              >
+                <Camera className="w-4 h-4 text-white" />
+                <span className="text-[9px] font-medium text-white/80">ändern</span>
               </div>
             </div>
           </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-100 truncate">{displayName}</p>
+            <p className="text-xs text-slate-500 mt-0.5 truncate">{user?.email}</p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+              <span className="text-[10px] font-medium text-violet-300">Free Plan</span>
+            </div>
+          </div>
+        </div>
 
-          {/* Form */}
-          <form onSubmit={handleSave} className="space-y-5">
+        {/* Form */}
+        <div className="p-6">
+          <form onSubmit={handleSave} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <GlowInput
                 label="Vorname"
@@ -175,27 +251,7 @@ function ProfileSection({
             )}
 
             <div className="flex justify-end pt-1">
-              <button
-                type="submit"
-                disabled={saveState === "saving"}
-                className={cn(
-                  "relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium",
-                  "transition-all duration-200",
-                  "shadow-[0_1px_0_0_rgba(255,255,255,0.08)_inset]",
-                  "disabled:opacity-60 disabled:cursor-not-allowed",
-                  saveState === "saved"
-                    ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
-                    : "bg-gradient-to-r from-violet-600 to-violet-500 hover:opacity-90 text-white",
-                )}
-              >
-                {saveState === "saved" ? (
-                  <><Check className="w-3.5 h-3.5" /> Gespeichert</>
-                ) : saveState === "saving" ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Speichern…</>
-                ) : (
-                  <><Save className="w-3.5 h-3.5" /> Speichern</>
-                )}
-              </button>
+              <SaveButton state={saveState} />
             </div>
           </form>
         </div>
@@ -226,29 +282,27 @@ function AppearanceSection() {
   const [accent, setAccent] = useState<string>("violet");
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-base font-semibold text-white">Darstellung</h2>
-        <p className="text-sm text-white/40 mt-0.5">Passe das Erscheinungsbild der App an</p>
-      </div>
+    <div>
+      <SectionHeader
+        title="Darstellung"
+        description="Passe das Erscheinungsbild der App an"
+      />
 
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm divide-y divide-white/[0.04]">
-        {/* Theme */}
-        <div className="p-6 space-y-4">
-          <div>
-            <p className="text-sm font-medium text-white/80">Farbschema</p>
-            <p className="text-xs text-white/30 mt-0.5">Wähle zwischen hellem, dunklem oder Systemmodus</p>
-          </div>
-          <div className="flex gap-2 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] w-fit">
+      <div className="rounded-2xl border border-white/[0.07] bg-slate-900/50 backdrop-blur-sm divide-y divide-white/[0.04]">
+        <SettingsRow
+          label="Farbschema"
+          description="Wähle zwischen hellem, dunklem oder Systemmodus"
+        >
+          <div className="flex gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.06] w-fit">
             {THEMES.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setTheme(id)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium transition-all duration-200",
                   theme === id
                     ? "bg-violet-500/20 border border-violet-500/30 text-violet-300 shadow-[0_0_12px_rgba(139,92,246,0.15)]"
-                    : "text-white/40 hover:text-white/70 hover:bg-white/[0.04]",
+                    : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]",
                 )}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -256,14 +310,12 @@ function AppearanceSection() {
               </button>
             ))}
           </div>
-        </div>
+        </SettingsRow>
 
-        {/* Accent color */}
-        <div className="p-6 space-y-4">
-          <div>
-            <p className="text-sm font-medium text-white/80">Akzentfarbe</p>
-            <p className="text-xs text-white/30 mt-0.5">Wähle eine Akzentfarbe für die Benutzeroberfläche</p>
-          </div>
+        <SettingsRow
+          label="Akzentfarbe"
+          description="Wähle eine Akzentfarbe für die Benutzeroberfläche"
+        >
           <div className="flex gap-3">
             {ACCENT_COLORS.map(({ id, label, bg, ring }) => (
               <button
@@ -271,16 +323,16 @@ function AppearanceSection() {
                 onClick={() => setAccent(id)}
                 title={label}
                 className={cn(
-                  "w-8 h-8 rounded-full transition-all duration-200",
+                  "w-7 h-7 rounded-full transition-all duration-200",
                   bg,
                   accent === id
                     ? `ring-2 ring-offset-2 ring-offset-[#0a0b14] ${ring} scale-110`
-                    : "opacity-60 hover:opacity-100 hover:scale-105",
+                    : "opacity-50 hover:opacity-90 hover:scale-105",
                 )}
               />
             ))}
           </div>
-        </div>
+        </SettingsRow>
       </div>
     </div>
   );
@@ -290,18 +342,15 @@ function AppearanceSection() {
 
 function ComingSoonSection({ title, description }: { title: string; description: string }) {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-base font-semibold text-white">{title}</h2>
-        <p className="text-sm text-white/40 mt-0.5">{description}</p>
-      </div>
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm">
-        <div className="p-12 flex flex-col items-center justify-center text-center">
-          <div className="w-12 h-12 rounded-2xl border border-white/10 bg-white/[0.03] flex items-center justify-center mb-4">
-            <div className="w-2 h-2 rounded-full bg-violet-500/60" />
+    <div>
+      <SectionHeader title={title} description={description} />
+      <div className="rounded-2xl border border-white/[0.07] bg-slate-900/50 backdrop-blur-sm">
+        <div className="p-16 flex flex-col items-center justify-center text-center">
+          <div className="w-10 h-10 rounded-xl border border-white/[0.08] bg-white/[0.03] flex items-center justify-center mb-4">
+            <div className="w-2 h-2 rounded-full bg-violet-500/50" />
           </div>
-          <p className="text-sm font-medium text-white/50">Demnächst verfügbar</p>
-          <p className="text-xs text-white/25 mt-1">Dieser Bereich befindet sich noch in der Entwicklung.</p>
+          <p className="text-sm font-medium text-slate-400">Demnächst verfügbar</p>
+          <p className="text-xs text-slate-600 mt-1">Dieser Bereich befindet sich noch in der Entwicklung.</p>
         </div>
       </div>
     </div>
@@ -314,27 +363,23 @@ function DangerSection({ onSignOut }: { onSignOut: () => void }) {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-base font-semibold text-white">Danger Zone</h2>
-        <p className="text-sm text-white/40 mt-0.5">Irreversible Aktionen — bitte sorgfältig vorgehen</p>
-      </div>
+    <div>
+      <SectionHeader
+        title="Danger Zone"
+        description="Irreversible Aktionen — bitte sorgfältig vorgehen"
+      />
 
-      <div className="rounded-2xl border border-red-500/20 bg-red-500/[0.02] backdrop-blur-sm divide-y divide-red-500/10">
-        {/* Delete account */}
-        <div className="p-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-white/80">Konto löschen</p>
-            <p className="text-xs text-white/30 mt-0.5">
-              Löscht dein Konto und alle damit verbundenen Daten dauerhaft.
-            </p>
-          </div>
+      <div className="rounded-2xl border border-red-500/15 bg-red-950/20 backdrop-blur-sm divide-y divide-red-500/[0.08]">
+        <DangerRow
+          label="Konto löschen"
+          description="Löscht dein Konto und alle damit verbundenen Daten dauerhaft."
+        >
           {deleteConfirm ? (
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-red-300/70">Sicher?</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Sicher?</span>
               <button
                 onClick={() => setDeleteConfirm(false)}
-                className="px-3 py-1.5 rounded-lg text-xs text-white/50 hover:text-white/80 border border-white/10 hover:border-white/20 transition-all"
+                className="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-200 border border-white/10 hover:border-white/20 transition-all"
               >
                 Abbrechen
               </button>
@@ -345,28 +390,26 @@ function DangerSection({ onSignOut }: { onSignOut: () => void }) {
           ) : (
             <button
               onClick={() => setDeleteConfirm(true)}
-              className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium border border-red-500/25 text-red-400/80 hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-300 transition-all duration-200"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium border border-red-500/20 text-red-400/70 hover:bg-red-500/10 hover:border-red-500/35 hover:text-red-300 transition-all duration-200"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Konto löschen
+              Löschen
             </button>
           )}
-        </div>
+        </DangerRow>
 
-        {/* Sign out */}
-        <div className="p-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-white/80">Abmelden</p>
-            <p className="text-xs text-white/30 mt-0.5">Du wirst aus deinem Konto abgemeldet.</p>
-          </div>
+        <DangerRow
+          label="Abmelden"
+          description="Du wirst aus deinem Konto abgemeldet."
+        >
           <button
             onClick={onSignOut}
-            className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium border border-white/10 text-white/50 hover:bg-white/[0.04] hover:border-white/20 hover:text-white/80 transition-all duration-200"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium border border-white/10 text-slate-400 hover:bg-white/[0.04] hover:border-white/20 hover:text-slate-200 transition-all duration-200"
           >
             <LogOut className="w-3.5 h-3.5" />
             Abmelden
           </button>
-        </div>
+        </DangerRow>
       </div>
     </div>
   );
@@ -400,35 +443,45 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0b14] text-white">
-      {/* ── Ambient background ── */}
+      {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        {/* Dot grid */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.025]"
           style={{
             backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)",
             backgroundSize: "28px 28px",
           }}
         />
-        {/* Glow blobs */}
-        <div className="absolute -left-60 -top-20 h-[600px] w-[600px] rounded-full bg-violet-600/8 blur-[140px]" />
-        <div className="absolute -right-60 bottom-0 h-[500px] w-[500px] rounded-full bg-indigo-500/6 blur-[140px]" />
-        <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-500/4 blur-[120px]" />
+        <div className="absolute -left-60 -top-20 h-[500px] w-[500px] rounded-full bg-violet-600/8 blur-[140px]" />
+        <div className="absolute -right-60 bottom-0 h-[400px] w-[400px] rounded-full bg-indigo-500/6 blur-[140px]" />
       </div>
 
       <DashboardHeader />
 
-      <main className="mx-auto max-w-3xl px-4 pt-24 pb-16">
-        {/* Page header */}
+      <main className="mx-auto max-w-4xl px-4 pt-24 pb-20">
+        {/* Breadcrumb */}
+        <div className="mb-6 flex items-center gap-2 text-xs">
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1 text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Dashboard
+          </Link>
+          <span className="text-slate-700">/</span>
+          <span className="text-slate-400">Einstellungen</span>
+        </div>
+
+        {/* Page title */}
         <div className="mb-8">
-          <h1 className="text-xl font-semibold text-white">Einstellungen</h1>
-          <p className="text-sm text-white/40 mt-1">Verwalte dein Konto und deine Präferenzen</p>
+          <h1 className="text-xl font-semibold text-slate-100">Einstellungen</h1>
+          <p className="text-sm text-slate-500 mt-1">Verwalte dein Konto und deine Präferenzen</p>
         </div>
 
         {/* Layout: sidebar + content */}
-        <div className="flex gap-6">
-          {/* ── Vertical tab nav ── */}
-          <nav className="w-48 shrink-0 space-y-0.5">
+        <div className="flex gap-8">
+          {/* Vertical tab nav */}
+          <nav className="w-44 shrink-0 space-y-0.5">
             {TABS.map(({ id, label, icon: Icon }) => {
               const active = activeTab === id;
               const isDanger = id === "danger";
@@ -437,17 +490,17 @@ export default function SettingsPage() {
                   key={id}
                   onClick={() => setActiveTab(id)}
                   className={cn(
-                    "group relative w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition-all duration-200",
+                    "group relative w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200",
                     active
                       ? isDanger
                         ? "bg-red-500/10 text-red-300 border border-red-500/20"
-                        : "bg-violet-500/10 text-violet-300 border border-violet-500/20"
+                        : "bg-white/[0.06] text-slate-100 border border-white/[0.09]"
                       : isDanger
-                        ? "text-red-400/60 hover:bg-red-500/5 hover:text-red-400/80 border border-transparent"
-                        : "text-white/40 hover:bg-white/[0.04] hover:text-white/70 border border-transparent",
+                        ? "text-red-400/50 hover:bg-red-500/[0.06] hover:text-red-400/80 border border-transparent"
+                        : "text-slate-500 hover:bg-white/[0.04] hover:text-slate-300 border border-transparent",
                   )}
                 >
-                  {/* Active left accent bar */}
+                  {/* Active accent bar */}
                   {active && (
                     <span
                       className={cn(
@@ -463,32 +516,26 @@ export default function SettingsPage() {
                         ? isDanger
                           ? "text-red-400"
                           : "text-violet-400"
-                        : "text-white/30 group-hover:text-white/50",
+                        : isDanger
+                          ? "text-red-500/40 group-hover:text-red-400/70"
+                          : "text-slate-600 group-hover:text-slate-400",
                     )}
                   />
-                  <span className="font-medium">{label}</span>
-                  {active && (
-                    <ChevronRight
-                      className={cn(
-                        "w-3 h-3 ml-auto shrink-0",
-                        isDanger ? "text-red-400/50" : "text-violet-400/50",
-                      )}
-                    />
-                  )}
+                  <span>{label}</span>
                 </button>
               );
             })}
           </nav>
 
-          {/* ── Content area ── */}
+          {/* Content area */}
           <div className="flex-1 min-w-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.12, ease: "easeOut" }}
               >
                 {activeTab === "profile" && (
                   <ProfileSection user={user} storedFirstName={storedFirstName} />
@@ -520,7 +567,7 @@ export default function SettingsPage() {
       </main>
 
       {/* Version badge */}
-      <div className="fixed bottom-4 right-4 text-[10px] font-mono text-white/20 select-none">
+      <div className="fixed bottom-4 right-4 text-[10px] font-mono text-white/15 select-none">
         v0.0.7
       </div>
     </div>
