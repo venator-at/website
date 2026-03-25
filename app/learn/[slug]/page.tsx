@@ -9,6 +9,7 @@ import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import { ArrowLeft, ChevronRight, Clock, BookOpen, Hash } from "lucide-react";
 import "highlight.js/styles/github-dark.css";
+import { ProgressCheckbox } from "@/components/docs/ProgressCheckbox";
 
 // Next.js static paths generator
 export async function generateStaticParams() {
@@ -235,6 +236,8 @@ export default async function ArticlePage({
               {doc.content}
             </ReactMarkdown>
           </article>
+
+          <ProgressCheckbox slug={slug} />
 
           {/* Prev / Next Navigation */}
           <div className="mt-16 pt-8 border-t border-white/10 grid sm:grid-cols-2 gap-4">

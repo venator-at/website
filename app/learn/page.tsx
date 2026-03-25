@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getAllDocs } from "@/lib/docs";
-import { ArrowLeft, BookOpen, Layers, Clock, ChevronRight } from "lucide-react";
+import { ArrowLeft, BookOpen, ChevronRight } from "lucide-react";
+import { CategoryList } from "@/components/docs/CategoryList";
 
 export const metadata: Metadata = {
   title: "Docs & Tutorials | Venator",
@@ -25,58 +26,7 @@ export const metadata: Metadata = {
   },
 };
 
-// Category icon + accent color mapping
-const CATEGORY_STYLES: Record<
-  string,
-  { color: string; bg: string; border: string }
-> = {
-  "Architektur-Grundlagen": {
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/8",
-    border: "border-cyan-400/20",
-  },
-  Datenbanken: {
-    color: "text-violet-400",
-    bg: "bg-violet-500/8",
-    border: "border-violet-400/20",
-  },
-  "Authentifizierung & Sicherheit": {
-    color: "text-fuchsia-400",
-    bg: "bg-fuchsia-500/8",
-    border: "border-fuchsia-400/20",
-  },
-  "Deployment & Hosting": {
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/8",
-    border: "border-emerald-400/20",
-  },
-  Performance: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/8",
-    border: "border-amber-400/20",
-  },
-  "Frontend-Architektur": {
-    color: "text-sky-400",
-    bg: "bg-sky-500/8",
-    border: "border-sky-400/20",
-  },
-  DevOps: {
-    color: "text-orange-400",
-    bg: "bg-orange-500/8",
-    border: "border-orange-400/20",
-  },
-  "SaaS & Produkt": {
-    color: "text-rose-400",
-    bg: "bg-rose-500/8",
-    border: "border-rose-400/20",
-  },
-};
 
-const DEFAULT_STYLE = {
-  color: "text-slate-400",
-  bg: "bg-slate-500/8",
-  border: "border-slate-400/20",
-};
 
 export default function LearnHubPage() {
   const docs = getAllDocs();
@@ -181,47 +131,7 @@ export default function LearnHubPage() {
 
         {/* Categories */}
         <div className="space-y-14">
-          {Object.entries(grouped).map(([category, items]) => {
-            const style = CATEGORY_STYLES[category] ?? DEFAULT_STYLE;
-            return (
-              <section key={category}>
-                <h2 className="text-xl font-bold text-slate-200 mb-5 flex items-center gap-2">
-                  <Layers className={`h-5 w-5 ${style.color}`} />
-                  {category}
-                  <span
-                    className={`ml-1 rounded-full border ${style.border} ${style.bg} px-2 py-0.5 text-xs font-normal ${style.color}`}
-                  >
-                    {items.length} Artikel
-                  </span>
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {items.map((item) => (
-                    <Link
-                      key={item.slug}
-                      href={`/learn/${item.slug}`}
-                      className="group flex flex-col justify-between rounded-xl border border-white/8 bg-slate-900/40 p-5 transition-all hover:bg-white/5 hover:border-white/12 hover:-translate-y-0.5"
-                    >
-                      <div>
-                        <h3 className="text-base font-semibold text-slate-50 mb-2 group-hover:text-cyan-400 transition-colors">
-                          {item.meta.title}
-                        </h3>
-                        <p className="text-sm text-slate-400 leading-relaxed line-clamp-2">
-                          {item.meta.description}
-                        </p>
-                      </div>
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                          <Clock className="h-3.5 w-3.5" />
-                          {item.readingTime} Min. Lesezeit
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-slate-600 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
+          <CategoryList grouped={grouped} />
         </div>
 
         {/* Bottom CTA */}

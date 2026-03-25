@@ -1,0 +1,8 @@
+﻿website/app/signup/page.tsx(104,13): error TS2554: Expected 3 arguments, but got 2.
+website/lib/graph/transform.ts(196,21): error TS2345: Argument of type '{ name: string; tech: string; reason: string; alternatives: string[]; risks: string[]; }' is not assignable to parameter of type 'ArchitectureComponentInput'.
+  Type '{ name: string; tech: string; reason: string; alternatives: string[]; risks: string[]; }' is missing the following properties from type 'ArchitectureComponentInput': category, difficulty, pricing
+website/lib/graph/transform.ts(375,9): error TS2322: Type '{ id: string; source: string; target: string; animated: true; label: string; markerEnd: { type: MarkerType.ArrowClosed; width: number; height: number; color: string; }; style: { strokeWidth: number; stroke: "#22d3ee"; }; ... 5 more ...; data: { ...; }; }[]' is not assignable to type 'ArchitectureEdge[]'.
+  Type '{ id: string; source: string; target: string; animated: true; label: string; markerEnd: { type: MarkerType.ArrowClosed; width: number; height: number; color: string; }; style: { strokeWidth: number; stroke: "#22d3ee"; }; ... 5 more ...; data: { ...; }; }' is not assignable to type 'ArchitectureEdge'.
+    Type '{ id: string; source: string; target: string; animated: true; label: string; markerEnd: { type: MarkerType.ArrowClosed; width: number; height: number; color: string; }; style: { strokeWidth: number; stroke: "#22d3ee"; }; ... 5 more ...; data: { ...; }; }' is not assignable to type 'EdgeBase<ArchitectureEdgeData, string | undefined>'.
+      Types of property 'data' are incompatible.
+        Type '{ relationType: string; }' is missing the following properties from type 'ArchitectureEdgeData': fromName, toName

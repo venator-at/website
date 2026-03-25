@@ -1,0 +1,63 @@
+﻿git : remote: error: GH013: Repository rule 
+violations found for refs/heads/main.        
+In Zeile:1 Zeichen:1
++ git push origin main 2>&1 | Out-File -Encoding 
+UTF8 push-error.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (rem 
+   ote: error: ...s/main.        :String) [], R  
+  emoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+remote: 
+remote: - GITHUB PUSH PROTECTION        
+remote:   ÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇö
+ÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔ
+ÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇö        
+remote:     Resolve the following violations 
+before pushing again        
+remote: 
+remote:     - Push cannot contain secrets        
+remote: 
+remote:             
+remote:      (?) Learn how to resolve a blocked 
+push        
+remote:      https://docs.github.com/code-securit
+y/secret-scanning/working-with-secret-scanning-an
+d-push-protection/working-with-push-protection-fr
+om-the-command-line#resolving-a-blocked-push     
+   
+remote:             
+remote:      (?) This repository does not have 
+Secret Scanning enabled, but is eligible. Enable 
+Secret Scanning to view and manage detected 
+secrets.        
+remote:      Visit the repository settings page, 
+https://github.com/venator-at/website/settings/se
+curity_analysis        
+remote:             
+remote:             
+remote:       ÔÇöÔÇö Stripe API Key ÔÇöÔÇöÔÇöÔÇöÔ
+ÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇ
+öÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇöÔÇö   
+     
+remote:        locations:        
+remote:          - commit: 
+17e130f6efea20b90b04313112768b746b65b77a        
+remote:            path: 
+content/learn/api-keys-verwalten.md:23        
+remote:             
+remote:        (?) To push, remove secret from 
+commit(s) or follow this URL to allow the 
+secret.        
+remote:        https://github.com/venator-at/webs
+ite/security/secret-scanning/unblock-secret/3BRCs
+knvTTJ7uZbaVm3O9X9XuXs        
+remote:             
+remote: 
+remote: 
+To https://github.com/venator-at/website.git
+ ! [remote rejected] main -> main (push declined 
+due to repository rule violations)
+error: failed to push some refs to 
+'https://github.com/venator-at/website.git'
