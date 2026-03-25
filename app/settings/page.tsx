@@ -169,7 +169,7 @@ function ProfileSection({
       const downloadURL = await uploadUserAvatar(user.uid, file);
       await Promise.all([
         updateProfile(auth.currentUser, { photoURL: downloadURL }),
-        saveUserProfile(user.uid, firstName.trim() || user.displayName?.split(" ")[0] ?? "", downloadURL),
+        saveUserProfile(user.uid, (firstName.trim() || user.displayName?.split(" ")[0]) ?? "", downloadURL),
       ]);
       setLocalPhotoURL(downloadURL);
     } catch (err) {
