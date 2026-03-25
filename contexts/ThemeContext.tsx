@@ -33,17 +33,18 @@ function applyAccent(accent: Accent) {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
-  const [accent, setAccentState] = useState<Accent>("cyan");
+  const [theme, setThemeState] = useState<Theme>(
+    () => (typeof window !== "undefined" ? (localStorage.getItem("venator-theme") as Theme) ?? "dark" : "dark"),
+  );
+  const [accent, setAccentState] = useState<Accent>(
+    () => (typeof window !== "undefined" ? (localStorage.getItem("venator-accent") as Accent) ?? "cyan" : "cyan"),
+  );
 
-  // Init from localStorage on mount
+  // Apply theme/accent to DOM on mount
   useEffect(() => {
-    const storedTheme = (localStorage.getItem("venator-theme") as Theme) ?? "dark";
-    const storedAccent = (localStorage.getItem("venator-accent") as Accent) ?? "cyan";
-    setThemeState(storedTheme);
-    setAccentState(storedAccent);
-    applyTheme(storedTheme);
-    applyAccent(storedAccent);
+    applyTheme(theme);
+    applyAccent(accent);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Re-apply when system color scheme changes
