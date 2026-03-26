@@ -82,8 +82,10 @@ export function ComponentDetailsSheet({
           <SheetTitle className="text-2xl font-bold text-slate-100">
             {component?.name ?? "No component selected"}
           </SheetTitle>
-          <SheetDescription className="text-slate-300">
-            Click on a node to inspect technology choice, rationale, alternatives, and risks.
+          <SheetDescription className="text-slate-400">
+            {component
+              ? `${component.tech} · ${categoryLabel[component.category]}`
+              : "Click on a node in the graph to inspect its details."}
           </SheetDescription>
         </SheetHeader>
 
