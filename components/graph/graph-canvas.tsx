@@ -120,7 +120,7 @@ export function GraphCanvas({
   };
 
   return (
-    <section className="glass-panel neon-ring relative flex min-h-0 flex-1 w-full flex-col overflow-hidden rounded-2xl">
+    <section className="glass-panel neon-ring relative flex h-[520px] w-full flex-col overflow-hidden rounded-2xl">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.12),transparent_34%),radial-gradient(circle_at_84%_78%,rgba(168,85,247,0.12),transparent_30%)]" />
       <div className="relative flex items-center justify-between gap-3 border-b border-slate-700/70 bg-slate-950/45 px-4 py-3 backdrop-blur">
         <div>
