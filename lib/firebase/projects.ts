@@ -28,6 +28,7 @@ function fromFirestore(id: string, data: Record<string, unknown>): Project {
     checklistChecked: Array.isArray(data.checklistChecked)
       ? (data.checklistChecked as number[])
       : undefined,
+    notes: typeof data.notes === "string" ? data.notes : undefined,
     createdAt:
       data.createdAt instanceof Timestamp
         ? data.createdAt.toDate()
@@ -64,6 +65,38 @@ export async function saveChecklistChecked(
   await updateDoc(doc(db, "projects", projectId), {
     checklistChecked: checkedIndices,
   });
+}
+
+export async function updateProject(
+  projectId: string,
+  updates: Partial<Pick<Project, "title" | "status" | "notes">>,
+): Promise<void> {
+  if (!db) return;
+  await updateDoc(doc(db, "projects", projectId), {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function duplicateProject(projectId: string, newTitle: string): Promise<string> {
+  if (!db) throw new Error("Firestore not initialized");
+  const snap = await getDoc(doc(db, "projects", projectId));
+  if (!snap.exists()) throw new Error("Project not found");
+  const data = snap.data() as Record<string, unknown>;
+  const ref = await addDoc(collection(db, "projects"), {
+    userId: data.userId,
+    title: newTitle,
+    prompt: data.prompt,
+    status: "draft",
+    techStackArray: data.techStackArray ?? [],
+    componentCount: data.componentCount ?? 0,
+    architectureJson: data.architectureJson ?? null,
+    checklistChecked: [],
+    notes: "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return ref.id;
 }
 
 export async function deleteProject(projectId: string): Promise<void> {

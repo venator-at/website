@@ -9,6 +9,7 @@ import {
   DollarSign,
   Loader2,
   Map,
+  StickyNote,
   Terminal,
 } from "lucide-react";
 import { GraphCanvas } from "@/components/graph/graph-canvas";
@@ -30,9 +31,11 @@ interface ProjectDashboardProps {
   architecture: ArchitectureInput;
   extrasLoading?: boolean;
   initialCheckedItems?: number[];
+  initialNotes?: string;
+  onNotesChange?: (notes: string) => void;
 }
 
-type TabId = "roadmap" | "cost" | "checklist" | "setup" | "resources";
+type TabId = "roadmap" | "cost" | "checklist" | "setup" | "resources" | "notes";
 
 const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: "roadmap", label: "Roadmap", icon: Map },
@@ -40,6 +43,7 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: 
   { id: "checklist", label: "Checkliste", icon: CheckSquare },
   { id: "setup", label: "Setup", icon: Terminal },
   { id: "resources", label: "Lernen", icon: BookOpen },
+  { id: "notes", label: "Notizen", icon: StickyNote },
 ];
 
 const EXTRAS_TABS: TabId[] = ["cost", "checklist", "setup"];
@@ -51,6 +55,8 @@ export function ProjectDashboard({
   architecture,
   extrasLoading,
   initialCheckedItems,
+  initialNotes,
+  onNotesChange,
 }: ProjectDashboardProps) {
   const [selectedComponent, setSelectedComponent] = useState<ArchitectureComponentInput | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -61,6 +67,7 @@ export function ProjectDashboard({
     new Set(initialCheckedItems ?? []),
   );
   const [activeTab, setActiveTab] = useState<TabId>("roadmap");
+  const [notes, setNotes] = useState(initialNotes ?? "");
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
@@ -181,6 +188,15 @@ export function ProjectDashboard({
             )}
             {activeTab === "resources" && (
               <ResourcesContent resources={architecture.learningResources} />
+            )}
+            {activeTab === "notes" && (
+              <NotesContent
+                value={notes}
+                onChange={(v) => {
+                  setNotes(v);
+                  onNotesChange?.(v);
+                }}
+              />
             )}
           </div>
         </div>
@@ -399,6 +415,26 @@ function ResourcesContent({
           <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{res.description}</p>
         </div>
       ))}
+    </div>
+  );
+}
+
+function NotesContent({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex h-full flex-col p-3">
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Freie Notizen zum Projekt… (Markdown wird gespeichert)"
+        className="h-full min-h-[200px] w-full resize-none rounded-xl border border-white/8 bg-slate-950/60 p-3 font-mono text-xs text-slate-300 placeholder:text-slate-600 focus:border-cyan-400/40 focus:outline-none focus:ring-0"
+        spellCheck={false}
+      />
     </div>
   );
 }

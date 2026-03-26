@@ -1,4 +1,4 @@
-export type ProjectStatus = "draft" | "completed" | "in-progress";
+export type ProjectStatus = "draft" | "in-progress" | "completed" | "launched" | "archived";
 
 export interface Project {
   id: string;
@@ -10,6 +10,7 @@ export interface Project {
   componentCount: number;
   architectureJson?: string;
   checklistChecked?: number[];
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
