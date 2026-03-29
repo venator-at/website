@@ -1,6 +1,7 @@
 "use client";
 
-import { AlertTriangle, CircleCheckBig, Cpu, Lightbulb } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, Check, CircleCheckBig, Copy, Cpu, ExternalLink, Lightbulb } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -48,6 +49,27 @@ interface ComponentDetailsSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function renderAlternatives(items: string[]) {
+  if (items.length === 0) {
+    return <p className="text-sm text-slate-400">No alternatives provided.</p>;
+  }
+  return (
+    <ul className="space-y-2">
+      {items.map((item) => {
+        const sep = item.indexOf(" \u2014 ");
+        const techName = sep >= 0 ? item.slice(0, sep) : item;
+        const tradeoff = sep >= 0 ? item.slice(sep + 3) : null;
+        return (
+          <li key={item} className="rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm">
+            <span className="font-medium text-slate-100">{techName}</span>
+            {tradeoff && <span className="text-slate-400"> — {tradeoff}</span>}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function renderList(items: string[], emptyLabel: string) {
   if (items.length === 0) {
     return <p className="text-sm text-slate-400">{emptyLabel}</p>;
@@ -72,6 +94,14 @@ export function ComponentDetailsSheet({
   open,
   onOpenChange,
 }: ComponentDetailsSheetProps) {
+  const [copiedTech, setCopiedTech] = useState(false);
+
+  function handleCopyTech(text: string) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopiedTech(true);
+    setTimeout(() => setCopiedTech(false), 1500);
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full border-l border-slate-700 bg-slate-950/95 p-0 sm:max-w-lg">
@@ -110,14 +140,43 @@ export function ComponentDetailsSheet({
                 </Badge>
               </div>
 
+              {component.docsUrl && (() => {
+                try {
+                  const hostname = new URL(component.docsUrl).hostname;
+                  return (
+                    <a
+                      href={component.docsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex w-fit items-center gap-2 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-cyan-400 hover:bg-slate-800/70 hover:text-cyan-300 transition-colors"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                      <span>Official Docs</span>
+                      <span className="text-slate-500 text-xs">{hostname}</span>
+                    </a>
+                  );
+                } catch {
+                  return null;
+                }
+              })()}
+
               <section className="space-y-2">
                 <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-100">
                   <Cpu className="h-4 w-4 text-cyan-300" />
                   Technology
                 </h4>
-                <p className="rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-slate-200">
-                  {component.tech}
-                </p>
+                <div className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/70 px-3 py-2">
+                  <span className="flex-1 text-sm text-slate-200">{component.tech}</span>
+                  <button
+                    onClick={() => handleCopyTech(component.tech)}
+                    className="text-slate-400 hover:text-slate-200 transition-colors"
+                    aria-label="Copy technology name"
+                  >
+                    {copiedTech
+                      ? <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      : <Copy className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
               </section>
 
               <section className="space-y-2">
@@ -135,7 +194,7 @@ export function ComponentDetailsSheet({
                   <CircleCheckBig className="h-4 w-4 text-emerald-300" />
                   Alternatives
                 </h4>
-                {renderList(component.alternatives, "No alternatives provided.")}
+                {renderAlternatives(component.alternatives)}
               </section>
 
               <section className="space-y-2">

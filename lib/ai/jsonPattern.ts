@@ -10,7 +10,8 @@ Output must be a single JSON object with this exact shape:
       "risks": ["string"],
       "category": "one of: frontend | backend | database | auth | hosting | storage | email | payments | monitoring | queue | realtime | cdn | ai | cms | api | mobile | devops | testing | orm",
       "difficulty": "one of: beginner | intermediate | advanced",
-      "pricing": "one of: free | freemium | paid | open-source"
+      "pricing": "one of: free | freemium | paid | open-source",
+      "docsUrl": "string (URL to the official documentation, e.g. 'https://nextjs.org/docs')"
     }
   ],
   "connections": [
@@ -169,6 +170,7 @@ FEATURE FLAGS & A/B TESTING
 - "category": Pick the single best category from: frontend, backend, database, auth, hosting, storage, email, payments, monitoring, queue, realtime, cdn, ai, cms, api, mobile, devops, testing, orm
 - "difficulty": Rate the learning curve for a beginner: beginner (easy, great docs, minimal config), intermediate (some concepts to learn), advanced (steep learning curve or complex setup)
 - "pricing": free (always free), freemium (free tier + paid plans), paid (requires payment), open-source (self-hostable, free if you manage it)
+- "docsUrl": Official documentation URL for the chosen technology. Use the canonical docs homepage (e.g. "https://nextjs.org/docs"). Omit entirely if unsure — do not guess URLs.
 - max 80 components, no isolated components when more than two exist.
 
 ━━━ CONNECTION RULES ━━━

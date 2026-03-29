@@ -34,6 +34,7 @@ export interface ArchitectureComponentInput {
   category: ComponentCategory;
   difficulty: ComponentDifficulty;
   pricing: ComponentPricing;
+  docsUrl?: string;
 }
 
 export interface ArchitectureConnectionInput {

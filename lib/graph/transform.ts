@@ -233,6 +233,9 @@ export function parseArchitectureJson(raw: string): ParseArchitectureResult {
 
     componentNameByLowercase.set(normalizedName, name);
 
+    const rawDocsUrl = readString(rawComponent.docsUrl) || undefined;
+    const docsUrl = rawDocsUrl?.startsWith("http") ? rawDocsUrl : undefined;
+
     components.push({
       name,
       tech,
@@ -242,6 +245,7 @@ export function parseArchitectureJson(raw: string): ParseArchitectureResult {
       category: rawCategory as ComponentCategory,
       difficulty: rawDifficulty as ComponentDifficulty,
       pricing: rawPricing as ComponentPricing,
+      ...(docsUrl !== undefined && { docsUrl }),
     });
   }
 
