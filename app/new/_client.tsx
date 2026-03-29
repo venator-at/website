@@ -10,6 +10,7 @@ import { getIdToken } from "firebase/auth";
 import { createProject } from "@/lib/firebase/projects";
 import { GraphCanvas } from "@/components/graph/graph-canvas";
 import { ComponentDetailsSheet } from "@/components/panels/component-details-sheet";
+import { ConnectionDetailsSheet } from "@/components/panels/connection-details-sheet";
 import { parseArchitectureJson, transformArchitectureToGraph } from "@/lib/graph/transform";
 import { layoutGraph } from "@/lib/graph/layout";
 import { DashboardHeader } from "@/components/layout/DashboardHeader";
@@ -52,6 +53,8 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
   const [graphContainerOpen, setGraphContainerOpen] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState<ArchitectureComponentInput | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<ArchitectureEdge | null>(null);
+  const [connectionOpen, setConnectionOpen] = useState(false);
   const [projectTitle, setProjectTitle] = useState("");
 
   const firebaseConfigured = [
@@ -209,6 +212,11 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
   const handleNodeSelect = useCallback((component: ArchitectureComponentInput) => {
     setSelectedComponent(component);
     setDetailsOpen(true);
+  }, []);
+
+  const handleEdgeSelect = useCallback((edge: ArchitectureEdge) => {
+    setSelectedEdge(edge);
+    setConnectionOpen(true);
   }, []);
 
   if (authLoading) {
@@ -461,7 +469,8 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
                 nodes={graphNodes}
                 edges={graphEdges}
                 onNodeSelect={handleNodeSelect}
-                onEdgeSelect={() => {}}
+                onEdgeSelect={handleEdgeSelect}
+                className="flex-1 min-h-0"
               />
             ) : (
               <div className="flex h-full items-center justify-center rounded-2xl border border-cyan-400/20 bg-slate-900/60 text-sm text-slate-300">
@@ -476,6 +485,11 @@ export function NewProjectClient({ initialPrompt }: { initialPrompt: string }) {
         component={selectedComponent}
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
+      />
+      <ConnectionDetailsSheet
+        edge={selectedEdge}
+        open={connectionOpen}
+        onOpenChange={setConnectionOpen}
       />
     </div>
   );

@@ -502,7 +502,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
   // ── Main view ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
+    <div className="flex h-screen overflow-hidden flex-col bg-slate-950 text-slate-100">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -left-40 top-0 h-[500px] w-[500px] rounded-full bg-cyan-500/8 blur-[120px]" />
@@ -511,7 +511,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
 
       <DashboardHeader />
 
-      <main className="flex flex-col px-4 pb-8 pt-[72px]">
+      <main className="flex flex-1 min-h-0 flex-col px-4 pb-4 pt-[72px]">
         {/* ── Top bar ──────────────────────────────────────────────────────── */}
         <div className="mb-4 flex items-start justify-between gap-4">
           {/* Left: back + title + meta */}
@@ -735,7 +735,7 @@ export function ProjectPageClient({ projectId }: { projectId: string }) {
         {dashboardReady && architectureInput ? (
           <div
             className={cn(
-              "transition-all duration-700 ease-out",
+              "flex flex-1 min-h-0 flex-col transition-all duration-700 ease-out",
               dashboardReady ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
             )}
           >

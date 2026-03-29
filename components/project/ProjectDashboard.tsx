@@ -104,7 +104,7 @@ export function ProjectDashboard({
 
   return (
     <>
-      <div className="flex flex-col gap-4">
+      <div className="flex h-full flex-col gap-4">
 
         {/* ── 1. Architecture Graph ─────────────────────────────────────────── */}
         <GraphCanvas
@@ -113,10 +113,11 @@ export function ProjectDashboard({
           onNodeSelect={handleNodeSelect}
           onEdgeSelect={handleEdgeSelect}
           nodeCount={nodes.length}
+          className="flex-1 min-h-0"
         />
 
         {/* ── 2. Tabbed Info Panel ──────────────────────────────────────────── */}
-        <div className="glass-panel neon-ring flex h-[360px] flex-col overflow-hidden rounded-2xl">
+        <div className="glass-panel neon-ring flex h-[360px] shrink-0 flex-col overflow-hidden rounded-2xl">
 
           {/* Tab bar */}
           <div className="flex shrink-0 items-end gap-0.5 border-b border-white/8 bg-slate-950/50 px-2 pt-1.5">
