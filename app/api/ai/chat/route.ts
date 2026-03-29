@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       process.env.GOOGLE_API_KEY ??
       process.env.GEMINI_API_KEY
     )?.trim();
-    const model = process.env.GOOGLE_AI_MODEL ?? "gemini-3-flash-preview";
+    const model = process.env.GOOGLE_AI_MODEL ?? "gemini-2.0-flash";
 
     if (!apiKey) {
       return respond({ error: "Missing Google AI key." }, 500);

@@ -235,9 +235,14 @@ export default function DashboardPage() {
     setChatSubmitting(true);
 
     try {
+      let chatToken: string | undefined;
+      if (user && auth?.currentUser) {
+        chatToken = await getIdToken(auth.currentUser, false).catch(() => undefined);
+      }
+
       const response = await fetch("/api/ai/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(chatToken ? { Authorization: `Bearer ${chatToken}` } : {}) },
         body: JSON.stringify({ message }),
       });
 
