@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit, getRateLimitIdentifier } from "@/lib/firebase/rateLimit";
+import { getAdminAuth } from "@/lib/firebase/admin";
 
 interface ChatRequest {
   message?: string;
+}
+
+async function resolveUserId(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  try {
+    const token = authHeader.slice(7);
+    const decoded = await getAdminAuth().verifyIdToken(token);
+    return decoded.uid;
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(request: Request) {
@@ -14,8 +27,14 @@ export async function POST(request: Request) {
   };
 
   try {
-    // Rate limit: 10 calls per minute per IP (chat route has no auth)
-    const rateLimitId = getRateLimitIdentifier(request, null);
+    // Require authentication
+    const userId = await resolveUserId(request);
+    if (!userId) {
+      return respond({ error: "Authentifizierung erforderlich." }, 401);
+    }
+
+    // Rate limit: 10 calls per minute per user
+    const rateLimitId = getRateLimitIdentifier(request, userId);
     const rateLimit = await checkRateLimit(rateLimitId);
     if (!rateLimit.allowed) {
       const retryAfterSec = Math.ceil(rateLimit.retryAfterMs / 1000);
@@ -32,6 +51,10 @@ export async function POST(request: Request) {
 
     if (!message) {
       return respond({ error: "Please provide a message." }, 400);
+    }
+
+    if (message.length > 5000) {
+      return respond({ error: "Message must be at most 5000 characters." }, 400);
     }
 
     const apiKey = (
@@ -63,7 +86,8 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      return respond({ error: `AI request failed: ${response.status} ${errorText}` }, 502);
+      console.error("[CHAT ROUTE] Gemini request failed", { status: response.status, body: errorText });
+      return respond({ error: "KI-Anfrage fehlgeschlagen. Bitte versuche es erneut." }, 502);
     }
 
     const data = (await response.json()) as {

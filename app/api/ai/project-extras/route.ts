@@ -1,4 +1,18 @@
 import { NextResponse } from "next/server";
+import { getAdminAuth } from "@/lib/firebase/admin";
+import { checkRateLimit, getRateLimitIdentifier } from "@/lib/firebase/rateLimit";
+
+async function resolveUserId(request: Request): Promise<string | null> {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  try {
+    const token = authHeader.slice(7);
+    const decoded = await getAdminAuth().verifyIdToken(token);
+    return decoded.uid;
+  } catch {
+    return null;
+  }
+}
 
 interface ProjectExtrasRequest {
   prompt?: string;
@@ -37,7 +51,8 @@ async function callGemini(aiPrompt: string, apiKey: string, model: string): Prom
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Gemini HTTP ${response.status}: ${errorText}`);
+    console.error("[project-extras] Gemini request failed", { status: response.status, body: errorText });
+    throw new Error("KI-Anfrage fehlgeschlagen.");
   }
 
   const data = (await response.json()) as {
@@ -83,6 +98,25 @@ async function callGemini(aiPrompt: string, apiKey: string, model: string): Prom
 
 export async function POST(request: Request) {
   try {
+    // Require authentication
+    const userId = await resolveUserId(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Authentifizierung erforderlich." }, { status: 401 });
+    }
+
+    // Rate limit: 10 calls per minute per user
+    const rateLimitId = getRateLimitIdentifier(request, userId);
+    const rateLimit = await checkRateLimit(rateLimitId);
+    if (!rateLimit.allowed) {
+      const retryAfterSec = Math.ceil(rateLimit.retryAfterMs / 1000);
+      const response = NextResponse.json(
+        { error: "Zu viele Anfragen. Bitte warte eine Minute und versuche es erneut." },
+        { status: 429 },
+      );
+      response.headers.set("Retry-After", String(retryAfterSec));
+      return response;
+    }
+
     const body = (await request.json()) as ProjectExtrasRequest;
     const prompt = body.prompt?.trim();
     const techStack = Array.isArray(body.techStack) ? body.techStack : [];
@@ -90,6 +124,10 @@ export async function POST(request: Request) {
 
     if (!prompt) {
       return NextResponse.json({ error: "prompt is required" }, { status: 400 });
+    }
+
+    if (prompt.length > 2000) {
+      return NextResponse.json({ error: "Prompt must be at most 2000 characters." }, { status: 400 });
     }
 
     const apiKey = (

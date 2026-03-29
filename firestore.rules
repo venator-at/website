@@ -1,10 +1,39 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Projects: only owner can read/write
     match /projects/{projectId} {
       allow get, list: if request.auth != null && request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+
+      // Subcollections: inherit project ownership
+      match /decisions/{decisionId} {
+        allow read, write: if request.auth != null
+          && request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.userId;
+      }
+
+      match /graphs/{graphId} {
+        allow read, write: if request.auth != null
+          && request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.userId;
+      }
+    }
+
+    // Users: only the user themselves can read/write their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Credit transactions: user can only read their own, no client writes
+    match /credit_transactions/{txId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow write: if false; // only server-side Admin SDK writes
+    }
+
+    // Chats: only owner can read/write
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
   }
 }

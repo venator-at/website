@@ -130,6 +130,20 @@ export async function POST(request: Request) {
       return respond({ error: "Please provide an idea." }, 400);
     }
 
+    // Input length validation
+    if (idea.length > 2000) {
+      return respond({ error: "Idea must be at most 2000 characters." }, 400);
+    }
+    if ((projectType?.length ?? 0) > 100) {
+      return respond({ error: "Project type must be at most 100 characters." }, 400);
+    }
+    if ((experienceLevel?.length ?? 0) > 100) {
+      return respond({ error: "Experience level must be at most 100 characters." }, 400);
+    }
+    if ((budgetLevel?.length ?? 0) > 100) {
+      return respond({ error: "Budget level must be at most 100 characters." }, 400);
+    }
+
     // Verify auth
     const userId = await resolveUserId(request);
 
@@ -158,6 +172,8 @@ export async function POST(request: Request) {
           402,
         );
       }
+      // Deduct credits BEFORE generation to prevent free usage on silent failures
+      await deductCredits(userId);
     }
 
     // Support both key names:
@@ -181,9 +197,11 @@ export async function POST(request: Request) {
     }
 
     const prompt = buildArchitectureGeneratorPrompt(idea, { projectType, experienceLevel, budgetLevel });
-    console.log("[AI PROMPT START]");
-    console.log(prompt);
-    console.log("[AI PROMPT END]");
+    if (process.env.NODE_ENV === "development") {
+      console.log("[AI PROMPT START]");
+      console.log(prompt);
+      console.log("[AI PROMPT END]");
+    }
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
@@ -223,9 +241,10 @@ export async function POST(request: Request) {
         requestId,
         status: response.status,
         body: errorText,
+        hint,
       });
       return respond(
-        { error: `Gemini request failed (${model}): ${response.status} ${errorText}${hint}` },
+        { error: "KI-Anfrage fehlgeschlagen. Bitte versuche es erneut." },
         502,
       );
     }
@@ -275,13 +294,6 @@ export async function POST(request: Request) {
         },
         502,
       );
-    }
-
-    // Deduct credits after successful generation
-    if (userId) {
-      await deductCredits(userId).catch((err) => {
-        console.error("[AI ROUTE] Credit deduction failed", err);
-      });
     }
 
     return respond(

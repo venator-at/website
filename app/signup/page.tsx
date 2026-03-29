@@ -113,8 +113,8 @@ export default function SignupPage() {
       setError('Bitte gib deinen Vornamen ein.');
       return;
     }
-    if (password.length < 6) {
-      setError('Passwort muss mindestens 6 Zeichen lang sein.');
+    if (password.length < 8) {
+      setError('Passwort muss mindestens 8 Zeichen lang sein.');
       return;
     }
     setLoading(true);
@@ -172,7 +172,7 @@ export default function SignupPage() {
         label: 'Passwort',
         required: true,
         type: 'password' as const,
-        placeholder: 'Mindestens 6 Zeichen',
+        placeholder: 'Mindestens 8 Zeichen',
         onChange: (event: ChangeEvent<HTMLInputElement>) =>
           setPassword(event.target.value),
       },
@@ -223,7 +223,7 @@ function getErrorMessage(err: unknown): string {
       case 'auth/email-already-in-use':
         return 'Ein Konto mit dieser E-Mail-Adresse existiert bereits.';
       case 'auth/weak-password':
-        return 'Passwort muss mindestens 6 Zeichen lang sein.';
+        return 'Passwort muss mindestens 8 Zeichen lang sein.';
       case 'auth/invalid-email':
         return 'Bitte geben Sie eine gültige E-Mail-Adresse ein.';
       case 'auth/popup-closed-by-user':
